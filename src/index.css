@@ -18,6 +18,12 @@ body {
   touch-action: pan-y;
 }
 
+.modal-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+}
+
 .input-bar-safe-area {
   padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }

@@ -1,4 +1,5 @@
-import { Coins, Lock, Sparkles, WandSparkles, X } from 'lucide-react'
+import { Coins, Lock, Sparkles, WandSparkles } from 'lucide-react'
+import { ModalBody, ModalCloseButton, ModalFooter, ModalHeader, ModalShell } from './ModalShell'
 
 const soulShopItems = [
   {
@@ -18,33 +19,25 @@ const soulShopItems = [
 ]
 
 function SoulShopModal({ isOpen, onClose, soulPoints = 0, upgrades = {}, onPurchase, onCheatAddSoul }) {
-  if (!isOpen) {
-    return null
-  }
-
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 px-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl rounded-3xl border border-amber-200 bg-white p-6 shadow-2xl sm:p-8">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
-          aria-label="关闭灵魂商店"
-        >
-          <X size={16} />
-        </button>
-
-        <div className="mb-4 flex items-center justify-between gap-3">
+    <ModalShell isOpen={isOpen} onClose={onClose} zIndexClass="z-[70]" panelClassName="sm:max-w-2xl">
+      <ModalHeader>
+        <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-amber-500">Meta Progression</p>
             <h3 className="text-2xl font-extrabold text-slate-900">灵魂商店</h3>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700">
-            <WandSparkles size={14} />
-            打工魂 {Math.floor(soulPoints)}
+          <div className="flex items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700">
+              <WandSparkles size={14} />
+              打工魂 {Math.floor(soulPoints)}
+            </div>
+            <ModalCloseButton onClick={onClose} label="关闭灵魂商店" />
           </div>
         </div>
+      </ModalHeader>
 
+      <ModalBody>
         <div className="space-y-3">
           {soulShopItems.map((item) => {
             const Icon = item.icon
@@ -52,11 +45,8 @@ function SoulShopModal({ isOpen, onClose, soulPoints = 0, upgrades = {}, onPurch
             const notEnough = soulPoints < item.cost
 
             return (
-              <section
-                key={item.id}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
+              <section key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>
                     <p className="inline-flex items-center gap-1 text-base font-semibold text-slate-800">
                       <Icon size={16} className="text-amber-500" />
@@ -69,7 +59,7 @@ function SoulShopModal({ isOpen, onClose, soulPoints = 0, upgrades = {}, onPurch
                     type="button"
                     onClick={() => onPurchase?.(item.id)}
                     disabled={owned || notEnough}
-                    className="inline-flex h-11 min-w-24 items-center justify-center gap-1 rounded-xl border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-700 transition hover:border-amber-300 hover:bg-amber-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                    className="inline-flex h-11 w-full items-center justify-center gap-1 rounded-xl border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-700 transition hover:border-amber-300 hover:bg-amber-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 md:w-auto md:min-w-24"
                   >
                     {owned ? (
                       <>
@@ -85,21 +75,29 @@ function SoulShopModal({ isOpen, onClose, soulPoints = 0, upgrades = {}, onPurch
             )
           })}
         </div>
+      </ModalBody>
 
-        <div className="mt-5 flex items-center justify-between gap-3">
-          <p className="text-xs text-slate-500">局外永久增益会自动保存到本地浏览器。</p>
+      <ModalFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-slate-500">局外永久增益会自动保存到本地浏览器。</p>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <button
             type="button"
             onClick={onCheatAddSoul}
-            className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] text-slate-400 transition hover:border-amber-300 hover:text-amber-600"
+            className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] text-slate-400 transition hover:border-amber-300 hover:text-amber-600"
           >
             dev: +1000 魂
           </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-100"
+          >
+            关闭
+          </button>
         </div>
-      </div>
-    </div>
+      </ModalFooter>
+    </ModalShell>
   )
 }
 
 export default SoulShopModal
-
