@@ -49,7 +49,7 @@ function InputBar({
               : null
 
   return (
-    <footer className="input-bar-safe-area z-10 shrink-0 border-t border-slate-200 bg-white p-4">
+    <footer className="input-bar-safe-area z-10 shrink-0 border-t border-slate-200 bg-white p-3 sm:p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-semibold text-slate-700">{isInvestmentInputMode ? '投资决策区' : '本回合行动区'}</p>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
@@ -63,7 +63,7 @@ function InputBar({
             type="button"
             onClick={onSideHustle}
             disabled={!canSideHustle}
-            className="h-12 rounded-full border border-emerald-300 bg-emerald-50 px-4 text-sm font-medium text-emerald-700 shadow-sm transition hover:border-emerald-400 hover:bg-emerald-100 hover:shadow disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+            className="h-11 w-full rounded-full border border-emerald-300 bg-emerald-50 px-4 text-sm font-medium text-emerald-700 shadow-sm transition hover:border-emerald-400 hover:bg-emerald-100 hover:shadow disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 sm:h-12 sm:w-auto"
           >
             📦 疯狂接私活 ({sideHustlesToday}/{sideHustleLimit})
           </button>
@@ -124,7 +124,7 @@ function InputBar({
             type="button"
             onClick={onEndDay}
             disabled={!canEndDay}
-            className="w-full max-w-xl rounded-2xl border border-indigo-200 bg-indigo-50 px-6 py-4 text-center text-sm font-semibold text-indigo-700 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-100 hover:shadow disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+            className="w-full max-w-xl rounded-2xl border border-indigo-200 bg-indigo-50 px-5 py-3 text-center text-sm font-semibold text-indigo-700 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-100 hover:shadow disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 sm:px-6 sm:py-4"
           >
             {endDayButtonText}
           </button>
@@ -137,7 +137,7 @@ function InputBar({
               type="button"
               onClick={() => onSelectOption(item)}
               disabled={!canSelectOption}
-              className="min-h-12 rounded-2xl border border-blue-200 bg-white px-4 py-3 text-left text-sm font-medium text-slate-800 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:shadow disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+              className="min-h-12 rounded-2xl border border-blue-200 bg-white px-3 py-3 text-left text-sm font-medium text-slate-800 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:shadow disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 sm:px-4"
             >
               {`选项${String.fromCharCode(65 + index)}：${item}`}
             </button>

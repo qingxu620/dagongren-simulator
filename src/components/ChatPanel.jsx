@@ -71,8 +71,8 @@ function ChatPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <header className="shrink-0 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-4 py-4">
-        <div>
+      <header className="shrink-0 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-3 py-3 sm:px-4 sm:py-4">
+        <div className="min-w-0 flex-1">
           <p className="text-sm text-slate-500">剧情对话流</p>
           <h2 className="text-lg font-bold text-slate-900">公司生存频道</h2>
           <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
@@ -89,7 +89,7 @@ function ChatPanel({
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <div className="mt-2 grid grid-cols-3 gap-2 text-center text-[11px]">
+            <div className="mt-2 grid grid-cols-3 gap-2 text-center text-[10px] sm:text-[11px]">
               {timelineLabels.map((label, index) => {
                 const isDone = index < currentTimelineIndex || (isAwaitingEndDay && index === currentTimelineIndex)
                 const isCurrent = index === currentTimelineIndex && !isAwaitingEndDay
@@ -111,7 +111,7 @@ function ChatPanel({
             </div>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex w-full shrink-0 items-center justify-between gap-2 sm:w-auto sm:justify-start">
           <button
             type="button"
             onClick={onOpenPhone}

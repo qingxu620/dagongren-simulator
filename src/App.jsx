@@ -2378,7 +2378,7 @@ function App() {
       {isLowHealthWarning ? <div className="pointer-events-none fixed inset-0 z-40 animate-vignette-alert" /> : null}
 
       <div
-        className={`modal-scroll w-full shrink-0 flex max-h-[45dvh] min-h-0 flex-col overflow-y-auto overscroll-contain border-b border-slate-200 ${sidebarToneClass} md:w-80 md:h-full md:max-h-full md:border-b-0 md:border-r`}
+        className={`modal-scroll w-full shrink-0 flex max-h-[36dvh] min-h-0 flex-col overflow-y-auto overscroll-contain border-b border-slate-200 ${sidebarToneClass} md:w-80 md:h-full md:max-h-full md:border-b-0 md:border-r`}
       >
         <SidebarStats
           gameState={gameState}
