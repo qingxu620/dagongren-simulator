@@ -2363,7 +2363,7 @@ function App() {
 
   return (
     <div
-      className={`h-[100dvh] overflow-hidden px-3 py-3 text-slate-800 sm:px-6 sm:py-6 ${
+      className={`h-[100dvh] overflow-hidden overscroll-none px-3 py-3 text-slate-800 sm:px-6 sm:py-6 ${
         isHallucinationMode ? 'bg-violet-100/80' : 'bg-slate-50'
       } ${
         isScreenShaking ? 'animate-screen-shake' : ''
@@ -2391,7 +2391,7 @@ function App() {
           isHallucinationMode={isHallucinationMode}
         />
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md lg:h-full">
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md lg:h-full">
           <ChatPanel
             messages={messages}
             isLoading={isLoading}

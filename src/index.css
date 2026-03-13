@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.chat-panel-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-padding-bottom: calc(8rem + env(safe-area-inset-bottom, 0px));
+  touch-action: pan-y;
+}
+
+.input-bar-safe-area {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
 @keyframes shake {
   0% {
     transform: translateX(0);

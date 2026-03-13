@@ -49,7 +49,7 @@ function InputBar({
               : null
 
   return (
-    <footer className="border-t border-slate-200 p-4">
+    <footer className="input-bar-safe-area sticky bottom-0 z-10 shrink-0 border-t border-slate-200 bg-white p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-semibold text-slate-700">{isInvestmentInputMode ? '投资决策区' : '本回合行动区'}</p>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
