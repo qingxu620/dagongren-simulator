@@ -11,6 +11,10 @@ body {
   overscroll-behavior: none;
 }
 
+:root {
+  --mobile-tab-bar-height: 6rem;
+}
+
 .chat-panel-scroll {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -26,6 +30,26 @@ body {
 
 .input-bar-safe-area {
   padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+.mobile-tab-frame {
+  height: calc(100dvh - (var(--mobile-tab-bar-height) + env(safe-area-inset-bottom, 0px)));
+}
+
+.mobile-tab-bar {
+  min-height: calc(var(--mobile-tab-bar-height) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+.mobile-pages-strip {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.mobile-page-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
 }
 
 @keyframes shake {

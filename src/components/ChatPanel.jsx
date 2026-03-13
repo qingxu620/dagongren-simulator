@@ -71,10 +71,10 @@ function ChatPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <header className="shrink-0 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-3 py-3 sm:px-4 sm:py-4">
+      <header className="shrink-0 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-3 py-2.5 sm:px-4 sm:py-4">
         <div className="min-w-0 flex-1">
           <p className="text-sm text-slate-500">剧情对话流</p>
-          <h2 className="text-lg font-bold text-slate-900">公司生存频道</h2>
+          <h2 className="text-base font-bold text-slate-900 sm:text-lg">公司生存频道</h2>
           <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-600">
               <span className="font-semibold text-slate-700">Day {day}</span>
@@ -115,7 +115,7 @@ function ChatPanel({
           <button
             type="button"
             onClick={onOpenPhone}
-            className="relative inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 transition hover:border-sky-300 hover:bg-sky-50"
+            className="relative inline-flex h-8 items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 sm:h-9"
           >
             <Smartphone size={14} />
             📱 手机
@@ -139,7 +139,7 @@ function ChatPanel({
         </div>
       </header>
 
-      <section className="chat-panel-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-32 touch-pan-y">
+      <section className="chat-panel-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 pb-24 touch-pan-y sm:p-4 sm:pb-32">
         {messages.map((message) => {
           const isPlayer = message.role === 'player'
 

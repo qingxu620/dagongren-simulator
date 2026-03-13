@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { BarChart3, MessageSquare, ShoppingCart } from 'lucide-react'
 import AchievementGalleryModal from './components/AchievementGalleryModal'
 import ApiKeyGateModal from './components/ApiKeyGateModal'
 import BackpackModal from './components/BackpackModal'
@@ -6,6 +7,8 @@ import ChatPanel from './components/ChatPanel'
 import EndgameSummaryModal from './components/EndgameSummaryModal'
 import InputBar from './components/InputBar'
 import InvestmentModal from './components/InvestmentModal'
+import MobileHubPage from './components/MobileHubPage'
+import MobileStatsPage from './components/MobileStatsPage'
 import MysterySellerModal from './components/MysterySellerModal'
 import PhoneDrawer from './components/PhoneDrawer'
 import ShopModal from './components/ShopModal'
@@ -954,6 +957,7 @@ function App() {
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [apiKeyStatus, setApiKeyStatus] = useState('')
   const [isApiKeyBootstrapped, setIsApiKeyBootstrapped] = useState(false)
+  const [activeTab, setActiveTab] = useState(1)
   const [hasStarted, setHasStarted] = useState(false)
   const [talents, setTalents] = useState([])
 
@@ -970,6 +974,8 @@ function App() {
   const eventsTodayRef = useRef(0)
   const maxEventsTodayRef = useRef(maxEventsToday)
   const isAwaitingEndDayRef = useRef(false)
+  const mobilePagesRef = useRef(null)
+  const activeTabRef = useRef(1)
   const sideHustlesTodayRef = useRef(0)
   const shakeTimerRef = useRef(null)
   const hasSettledRunRef = useRef(false)
@@ -1059,6 +1065,57 @@ function App() {
       setApiKeyStatus('检测到本地已保存 Key。')
     }
     setIsApiKeyBootstrapped(true)
+  }, [])
+
+  const scrollToMobileTab = useCallback((tabIndex, behavior = 'smooth') => {
+    const container = mobilePagesRef.current
+    if (!container) {
+      return
+    }
+
+    activeTabRef.current = tabIndex
+    setActiveTab(tabIndex)
+    container.scrollTo({
+      left: container.clientWidth * tabIndex,
+      behavior,
+    })
+  }, [])
+
+  const handleMobilePagesScroll = useCallback((event) => {
+    const container = event.currentTarget
+    if (!container.clientWidth) {
+      return
+    }
+
+    const nextTab = Math.max(0, Math.min(2, Math.round(container.scrollLeft / container.clientWidth)))
+    if (nextTab !== activeTabRef.current) {
+      activeTabRef.current = nextTab
+      setActiveTab(nextTab)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined
+    }
+
+    const resizeToCurrentTab = () => {
+      const container = mobilePagesRef.current
+      if (!container) {
+        return
+      }
+      container.scrollTo({
+        left: container.clientWidth * activeTabRef.current,
+        behavior: 'auto',
+      })
+    }
+
+    const rafId = window.requestAnimationFrame(resizeToCurrentTab)
+    window.addEventListener('resize', resizeToCurrentTab)
+    return () => {
+      window.cancelAnimationFrame(rafId)
+      window.removeEventListener('resize', resizeToCurrentTab)
+    }
   }, [])
 
   const hasApiKey = Boolean(apiKey)
@@ -1421,6 +1478,7 @@ function App() {
     setHasStarted(false)
     dayMessageCandidatesRef.current = []
     setApiKeyStatus('API Key 已保存到 localStorage。')
+    scrollToMobileTab(1)
   }
 
   const runPlayerTurn = useCallback(
@@ -2369,7 +2427,7 @@ function App() {
 
   return (
     <div
-      className={`h-[100dvh] w-full flex flex-col overflow-hidden bg-slate-50 text-slate-800 md:flex-row ${
+      className={`flex h-[100dvh] w-full flex-col overflow-hidden bg-slate-50 text-slate-800 md:flex-row ${
         isScreenShaking ? 'animate-screen-shake' : ''
       }`}
     >
@@ -2377,66 +2435,186 @@ function App() {
 
       {isLowHealthWarning ? <div className="pointer-events-none fixed inset-0 z-40 animate-vignette-alert" /> : null}
 
-      <div
-        className={`modal-scroll w-full shrink-0 flex max-h-[36dvh] min-h-0 flex-col overflow-y-auto overscroll-contain border-b border-slate-200 ${sidebarToneClass} md:w-80 md:h-full md:max-h-full md:border-b-0 md:border-r`}
-      >
-        <SidebarStats
-          gameState={gameState}
-          healthState={healthState}
-          talents={talents}
-          onOpenShop={handleOpenShop}
-          onOpenMarket={handleOpenMarket}
-          onOpenBackpack={handleOpenBackpack}
-          isInteractionLocked={isInteractionLocked}
-          isVictory={isVictory}
-          apiKeyInput={apiKeyInput}
-          onApiKeyInputChange={setApiKeyInput}
-          onSaveApiKey={handleSaveApiKey}
-          hasApiKey={hasApiKey}
-          apiKeyStatus={apiKeyStatus}
-          isHallucinationMode={isHallucinationMode}
-        />
+      <div className="mobile-tab-frame flex min-h-0 flex-col overflow-hidden md:hidden">
+        <div
+          ref={mobilePagesRef}
+          onScroll={handleMobilePagesScroll}
+          className="mobile-pages-strip flex h-full w-full flex-1 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth touch-pan-x [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <section
+            className={`mobile-page-scroll h-full min-h-0 w-full shrink-0 snap-center snap-always overflow-y-auto ${sidebarToneClass}`}
+          >
+            <MobileStatsPage
+              gameState={gameState}
+              healthState={healthState}
+              talents={talents}
+              apiKeyInput={apiKeyInput}
+              onApiKeyInputChange={setApiKeyInput}
+              onSaveApiKey={handleSaveApiKey}
+              hasApiKey={hasApiKey}
+              apiKeyStatus={apiKeyStatus}
+              isHallucinationMode={isHallucinationMode}
+            />
+          </section>
+
+          <section
+            className={`h-full min-h-0 w-full shrink-0 snap-center snap-always overflow-hidden ${mainToneClass}`}
+          >
+            <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white">
+              <div className="flex-1 min-h-0">
+                <ChatPanel
+                  messages={messages}
+                  isLoading={isLoading}
+                  isGameOver={isGameOver}
+                  isVictory={isVictory}
+                  day={gameState.day}
+                  eventsToday={eventsToday}
+                  maxEventsToday={maxEventsToday}
+                  isAwaitingEndDay={isAwaitingEndDay}
+                  onOpenPhone={handleOpenPhone}
+                  unreadPhoneCount={unreadPhoneCount}
+                  loadingHint={loadingHint}
+                />
+              </div>
+              <InputBar
+                options={currentOptions}
+                onSelectOption={handleSelectOption}
+                onEndDay={handleEndDay}
+                onSideHustle={handleSideHustle}
+                isLoading={isLoading}
+                isInteractionLocked={isInteractionLocked}
+                isGameOver={isGameOver}
+                isVictory={isVictory}
+                hasApiKey={hasApiKey}
+                isAwaitingEndDay={isAwaitingEndDay}
+                endDayButtonText={endDayButtonText}
+                sideHustlesToday={sideHustlesToday}
+                sideHustleLimit={SIDE_HUSTLE_LIMIT_PER_DAY}
+                eventsToday={eventsToday}
+                maxEventsToday={maxEventsToday}
+                isInvestmentInputMode={Boolean(investmentRequest)}
+                investmentAmount={investmentAmount}
+                maxInvestment={investmentRequest?.maxAmount || 0}
+                onInvestmentAmountChange={handleInvestmentAmountChange}
+                onConfirmInvestment={handleConfirmInvestment}
+                onRejectInvestment={handleRejectInvestment}
+              />
+            </div>
+          </section>
+
+          <section className="mobile-page-scroll h-full min-h-0 w-full shrink-0 snap-center snap-always overflow-y-auto bg-slate-50">
+            <MobileHubPage
+              onOpenPhone={handleOpenPhone}
+              unreadPhoneCount={unreadPhoneCount}
+              onOpenShop={handleOpenShop}
+              onOpenMarket={handleOpenMarket}
+              onOpenBackpack={handleOpenBackpack}
+              onOpenSoulShop={handleOpenSoulShop}
+              onOpenAchievements={handleOpenAchievements}
+              isInteractionLocked={isInteractionLocked}
+              isVictory={isVictory}
+            />
+          </section>
+        </div>
       </div>
 
-      <div className={`relative flex-1 flex min-h-0 min-w-0 flex-col overflow-hidden ${mainToneClass}`}>
-        <div className="flex-1 flex min-h-0 min-w-0 flex-col">
-          <ChatPanel
-            messages={messages}
-            isLoading={isLoading}
-            isGameOver={isGameOver}
+      <nav className="mobile-tab-bar fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-4 pt-3 backdrop-blur md:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-3 gap-2 rounded-3xl border border-slate-200 bg-white/90 p-2 shadow-lg">
+          <button
+            type="button"
+            onClick={() => scrollToMobileTab(0)}
+            className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-semibold transition ${
+              activeTab === 0 ? 'bg-slate-900 text-white' : 'text-slate-500'
+            }`}
+          >
+            <BarChart3 size={18} />
+            <span>状态</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToMobileTab(1)}
+            className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-semibold transition ${
+              activeTab === 1 ? 'bg-slate-900 text-white' : 'text-slate-500'
+            }`}
+          >
+            <MessageSquare size={18} />
+            <span>打工</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToMobileTab(2)}
+            className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-semibold transition ${
+              activeTab === 2 ? 'bg-slate-900 text-white' : 'text-slate-500'
+            }`}
+          >
+            <ShoppingCart size={18} />
+            <span>广场</span>
+          </button>
+        </div>
+      </nav>
+
+      <div className="hidden h-full min-h-0 w-full md:flex">
+        <div
+          className={`modal-scroll w-80 shrink-0 overflow-y-auto border-r border-slate-200 ${sidebarToneClass}`}
+        >
+          <SidebarStats
+            gameState={gameState}
+            healthState={healthState}
+            talents={talents}
+            onOpenShop={handleOpenShop}
+            onOpenMarket={handleOpenMarket}
+            onOpenBackpack={handleOpenBackpack}
+            isInteractionLocked={isInteractionLocked}
             isVictory={isVictory}
-            day={gameState.day}
-            eventsToday={eventsToday}
-            maxEventsToday={maxEventsToday}
-            isAwaitingEndDay={isAwaitingEndDay}
-            onOpenPhone={handleOpenPhone}
-            unreadPhoneCount={unreadPhoneCount}
-            loadingHint={loadingHint}
+            apiKeyInput={apiKeyInput}
+            onApiKeyInputChange={setApiKeyInput}
+            onSaveApiKey={handleSaveApiKey}
+            hasApiKey={hasApiKey}
+            apiKeyStatus={apiKeyStatus}
+            isHallucinationMode={isHallucinationMode}
           />
         </div>
-        <InputBar
-          options={currentOptions}
-          onSelectOption={handleSelectOption}
-          onEndDay={handleEndDay}
-          onSideHustle={handleSideHustle}
-          isLoading={isLoading}
-          isInteractionLocked={isInteractionLocked}
-          isGameOver={isGameOver}
-          isVictory={isVictory}
-          hasApiKey={hasApiKey}
-          isAwaitingEndDay={isAwaitingEndDay}
-          endDayButtonText={endDayButtonText}
-          sideHustlesToday={sideHustlesToday}
-          sideHustleLimit={SIDE_HUSTLE_LIMIT_PER_DAY}
-          eventsToday={eventsToday}
-          maxEventsToday={maxEventsToday}
-          isInvestmentInputMode={Boolean(investmentRequest)}
-          investmentAmount={investmentAmount}
-          maxInvestment={investmentRequest?.maxAmount || 0}
-          onInvestmentAmountChange={handleInvestmentAmountChange}
-          onConfirmInvestment={handleConfirmInvestment}
-          onRejectInvestment={handleRejectInvestment}
-        />
+
+        <div className={`relative flex-1 flex min-h-0 min-w-0 flex-col overflow-hidden ${mainToneClass}`}>
+          <div className="flex-1 flex min-h-0 min-w-0 flex-col">
+            <ChatPanel
+              messages={messages}
+              isLoading={isLoading}
+              isGameOver={isGameOver}
+              isVictory={isVictory}
+              day={gameState.day}
+              eventsToday={eventsToday}
+              maxEventsToday={maxEventsToday}
+              isAwaitingEndDay={isAwaitingEndDay}
+              onOpenPhone={handleOpenPhone}
+              unreadPhoneCount={unreadPhoneCount}
+              loadingHint={loadingHint}
+            />
+          </div>
+          <InputBar
+            options={currentOptions}
+            onSelectOption={handleSelectOption}
+            onEndDay={handleEndDay}
+            onSideHustle={handleSideHustle}
+            isLoading={isLoading}
+            isInteractionLocked={isInteractionLocked}
+            isGameOver={isGameOver}
+            isVictory={isVictory}
+            hasApiKey={hasApiKey}
+            isAwaitingEndDay={isAwaitingEndDay}
+            endDayButtonText={endDayButtonText}
+            sideHustlesToday={sideHustlesToday}
+            sideHustleLimit={SIDE_HUSTLE_LIMIT_PER_DAY}
+            eventsToday={eventsToday}
+            maxEventsToday={maxEventsToday}
+            isInvestmentInputMode={Boolean(investmentRequest)}
+            investmentAmount={investmentAmount}
+            maxInvestment={investmentRequest?.maxAmount || 0}
+            onInvestmentAmountChange={handleInvestmentAmountChange}
+            onConfirmInvestment={handleConfirmInvestment}
+            onRejectInvestment={handleRejectInvestment}
+          />
+        </div>
       </div>
 
       <ShopModal
