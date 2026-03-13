@@ -12,6 +12,7 @@ function EndgameSummaryModal({
   soulTotal = 0,
   unlockedTitles = [],
   onAcknowledge,
+  onRestart,
 }) {
   return (
     <ModalShell
@@ -69,13 +70,22 @@ function EndgameSummaryModal({
       </ModalBody>
 
       <ModalFooter>
-        <button
-          type="button"
-          onClick={onAcknowledge}
-          className="h-12 w-full rounded-2xl bg-sky-500 px-4 text-sm font-semibold text-white transition hover:bg-sky-400"
-        >
-          我知道了
-        </button>
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={onRestart}
+            className="h-12 w-full rounded-2xl bg-sky-500 px-4 text-sm font-semibold text-white transition hover:bg-sky-400"
+          >
+            🔄 重新投胎（再来一把）
+          </button>
+          <button
+            type="button"
+            onClick={onAcknowledge}
+            className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+          >
+            我知道了
+          </button>
+        </div>
       </ModalFooter>
     </ModalShell>
   )

@@ -11,6 +11,7 @@ import MobileHubPage from './components/MobileHubPage'
 import MobileStatsPage from './components/MobileStatsPage'
 import MysterySellerModal from './components/MysterySellerModal'
 import PhoneDrawer from './components/PhoneDrawer'
+import ResumeSaveModal from './components/ResumeSaveModal'
 import ShopModal from './components/ShopModal'
 import SidebarStats from './components/SidebarStats'
 import SoulShopModal from './components/SoulShopModal'
@@ -19,6 +20,7 @@ import TutorialModal from './components/TutorialModal'
 import { getGameOverReason, requestDeepSeekTurn } from './lib/deepseek'
 
 const API_KEY_STORAGE = 'dagongren.deepseek.api_key'
+const GAME_SAVE_STORAGE = 'dagongren_save'
 const SOUL_POINTS_STORAGE = 'dagongren.meta.soul_points'
 const SOUL_UPGRADES_STORAGE = 'dagongren.meta.soul_upgrades'
 const ACHIEVEMENTS_STORAGE = 'dagongren.meta.achievements'
@@ -48,6 +50,8 @@ const PHONE_MESSAGE_TRIGGER_RATE = 0.18
 const SALARY_CLAWBACK_TRIGGER_RATE = 0.2
 const SALARY_CLAWBACK_REASONS = ['团建费', '呼吸税', '左脚先踏进公司违规罚款', '工位空气使用费']
 const LOADING_HINTS = ['[老板正在输入中...]', '[命运齿轮转动中...]']
+const DEFAULT_END_DAY_BUTTON_TEXT = '🌙 终于熬到头了，打卡下班！'
+const DEFAULT_VICTORY_TEXT = '【恭喜你，熬过了30天，成功拿着N+1赔偿金光荣退休！】'
 const MONEY_SHAKE_THRESHOLD = 500
 const STAT_SHAKE_THRESHOLD = 20
 const SHAKE_DURATION_MS = 400
@@ -271,6 +275,27 @@ function safeWriteToStorage(key, value) {
   } catch {
     // Ignore localStorage write errors in private mode.
   }
+}
+
+function safeRemoveFromStorage(key) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.localStorage.removeItem(key)
+  } catch {
+    // Ignore localStorage remove errors in private mode.
+  }
+}
+
+function loadSavedGame() {
+  const raw = safeReadFromStorage(GAME_SAVE_STORAGE, null)
+  if (!raw || typeof raw !== 'object') {
+    return null
+  }
+
+  return raw
 }
 
 function loadSoulUpgrades() {
@@ -928,13 +953,13 @@ function App() {
   const [eventsToday, setEventsToday] = useState(0)
   const [maxEventsToday, setMaxEventsToday] = useState(() => rollMaxEventsToday())
   const [isAwaitingEndDay, setIsAwaitingEndDay] = useState(false)
-  const [endDayButtonText, setEndDayButtonText] = useState('🌙 终于熬到头了，打卡下班！')
+  const [endDayButtonText, setEndDayButtonText] = useState(DEFAULT_END_DAY_BUTTON_TEXT)
   const [sideHustlesToday, setSideHustlesToday] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [isScreenShaking, setIsScreenShaking] = useState(false)
   const [isGameOver, setIsGameOver] = useState(false)
   const [isVictory, setIsVictory] = useState(false)
-  const [victoryText, setVictoryText] = useState('【恭喜你，熬过了30天，成功拿着N+1赔偿金光荣退休！】')
+  const [victoryText, setVictoryText] = useState(DEFAULT_VICTORY_TEXT)
   const [isShopOpen, setIsShopOpen] = useState(false)
   const [isMarketOpen, setIsMarketOpen] = useState(false)
   const [isSellerOpen, setIsSellerOpen] = useState(false)
@@ -952,6 +977,7 @@ function App() {
   const [isSoulShopOpen, setIsSoulShopOpen] = useState(false)
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false)
   const [endgameSummary, setEndgameSummary] = useState(null)
+  const [pendingSavedGame, setPendingSavedGame] = useState(null)
 
   const [apiKey, setApiKey] = useState('')
   const [apiKeyInput, setApiKeyInput] = useState('')
@@ -982,6 +1008,7 @@ function App() {
   const scamRuinRef = useRef(false)
   const soulPointsRef = useRef(soulPoints)
   const unlockedAchievementsRef = useRef(unlockedAchievements)
+  const isResumePromptOpen = Boolean(pendingSavedGame)
 
   useEffect(() => {
     gameStateRef.current = gameState
@@ -1064,6 +1091,11 @@ function App() {
       setApiKeyInput(storedKey)
       setApiKeyStatus('检测到本地已保存 Key。')
     }
+
+    const savedGame = loadSavedGame()
+    if (savedGame?.isGameStarted) {
+      setPendingSavedGame(savedGame)
+    }
     setIsApiKeyBootstrapped(true)
   }, [])
 
@@ -1130,6 +1162,306 @@ function App() {
     () => phoneMessages.reduce((count, item) => count + (item.isRead ? 0 : 1), 0),
     [phoneMessages],
   )
+
+  const clearSavedGame = useCallback(() => {
+    safeRemoveFromStorage(GAME_SAVE_STORAGE)
+  }, [])
+
+  const saveGameState = useCallback(
+    (overrides = {}) => {
+      const isGameStarted = overrides.isGameStarted ?? hasStarted
+      if (!isGameStarted) {
+        return
+      }
+
+      const snapshotGameState = overrides.gameState ?? gameStateRef.current
+      const snapshotHealthState = overrides.healthState ?? healthStateRef.current
+      const snapshotMessages = overrides.messages ?? messagesRef.current
+      const snapshotTalents = overrides.talents ?? talents
+
+      const payload = {
+        version: 1,
+        savedAt: new Date().toISOString(),
+        isGameStarted,
+        day: snapshotGameState.day,
+        eventsToday: overrides.eventsToday ?? eventsTodayRef.current,
+        money: snapshotGameState.money,
+        energy: snapshotGameState.energy,
+        sanity: snapshotGameState.sanity,
+        bossFavor: snapshotGameState.bossFavor,
+        colleagueFavor: snapshotGameState.colleagueFavor,
+        clientFavor: snapshotGameState.clientFavor,
+        intelligence: snapshotGameState.wisdom,
+        luck: snapshotGameState.luck,
+        gameState: snapshotGameState,
+        healthState: snapshotHealthState,
+        activeDebuffs: snapshotHealthState,
+        chatHistory: snapshotMessages,
+        messages: snapshotMessages,
+        phoneMessages: overrides.phoneMessages ?? phoneMessagesRef.current,
+        inventory: overrides.inventory ?? inventoryRef.current,
+        holdings: overrides.holdings ?? holdingsRef.current,
+        marketPrices: overrides.marketPrices ?? marketPricesRef.current,
+        pendingInvestments: overrides.pendingInvestments ?? pendingInvestmentsRef.current,
+        sellerOffers: overrides.sellerOffers ?? sellerOffers,
+        investmentRequest: overrides.investmentRequest ?? investmentRequest,
+        investmentAmount: overrides.investmentAmount ?? investmentAmount,
+        activeFactionInvite: overrides.activeFactionInvite ?? activeFactionInviteRef.current,
+        currentOptions: overrides.currentOptions ?? currentOptions,
+        dayMessageCandidates: overrides.dayMessageCandidates ?? dayMessageCandidatesRef.current,
+        currentTalents: snapshotTalents,
+        talents: snapshotTalents,
+        maxEventsToday: overrides.maxEventsToday ?? maxEventsTodayRef.current,
+        sideHustlesToday: overrides.sideHustlesToday ?? sideHustlesTodayRef.current,
+        isAwaitingEndDay: overrides.isAwaitingEndDay ?? isAwaitingEndDayRef.current,
+        endDayButtonText: overrides.endDayButtonText ?? endDayButtonText,
+        loadingHint: overrides.loadingHint ?? loadingHint,
+        scamRuin: overrides.scamRuin ?? scamRuinRef.current,
+        isGameOver: false,
+        isVictory: false,
+      }
+
+      safeWriteToStorage(GAME_SAVE_STORAGE, payload)
+    },
+    [
+      currentOptions,
+      endDayButtonText,
+      hasStarted,
+      investmentAmount,
+      investmentRequest,
+      loadingHint,
+      sellerOffers,
+      talents,
+    ],
+  )
+
+  const buildFreshRunPreview = useCallback(
+    (nextSoulUpgrades = soulUpgrades) => {
+      const nextTalentSelection = createTalentSelectionState(nextSoulUpgrades)
+      const selectedForPreview = resolveSelectedTalents(
+        nextTalentSelection.choices,
+        nextTalentSelection.selectedIds,
+      )
+
+      return {
+        nextTalentSelection,
+        previewState: createInitialGameState(nextSoulUpgrades, selectedForPreview),
+        previewTalents: selectedForPreview.map((item) => item.name),
+      }
+    },
+    [soulUpgrades],
+  )
+
+  const resetRunState = useCallback(
+    ({ clearSave = false } = {}) => {
+      const { nextTalentSelection, previewState, previewTalents } = buildFreshRunPreview()
+      const nextMaxEvents = rollMaxEventsToday()
+
+      if (clearSave) {
+        clearSavedGame()
+      }
+
+      setTalentSelection(nextTalentSelection)
+      setGameState(previewState)
+      gameStateRef.current = previewState
+      setHealthState(initialHealthState)
+      healthStateRef.current = initialHealthState
+      setMessages(initialMessages)
+      messagesRef.current = initialMessages
+      setPhoneMessages([])
+      phoneMessagesRef.current = []
+      setPendingInvestments([])
+      pendingInvestmentsRef.current = []
+      setInvestmentRequest(null)
+      setInvestmentAmount(0)
+      setLoadingHint(LOADING_HINTS[0])
+      setCurrentOptions([])
+      setActiveFactionInvite(null)
+      activeFactionInviteRef.current = null
+      setEventsToday(0)
+      eventsTodayRef.current = 0
+      setMaxEventsToday(nextMaxEvents)
+      maxEventsTodayRef.current = nextMaxEvents
+      setIsAwaitingEndDay(false)
+      isAwaitingEndDayRef.current = false
+      setEndDayButtonText(DEFAULT_END_DAY_BUTTON_TEXT)
+      setSideHustlesToday(0)
+      sideHustlesTodayRef.current = 0
+      setIsLoading(false)
+      setIsScreenShaking(false)
+      setIsGameOver(false)
+      setIsVictory(false)
+      setVictoryText(DEFAULT_VICTORY_TEXT)
+      setIsShopOpen(false)
+      setIsMarketOpen(false)
+      setIsSellerOpen(false)
+      setIsBackpackOpen(false)
+      setIsPhoneOpen(false)
+      setShopErrorMessage('')
+      setMarketErrorMessage('')
+      setSellerErrorMessage('')
+      setBackpackErrorMessage('')
+      setMarketPrices(initialMarketPrices)
+      marketPricesRef.current = initialMarketPrices
+      setHoldings(initialHoldings)
+      holdingsRef.current = initialHoldings
+      setInventory([])
+      inventoryRef.current = []
+      setSellerOffers([])
+      setToasts([])
+      setIsSoulShopOpen(false)
+      setIsAchievementsOpen(false)
+      setEndgameSummary(null)
+      setHasStarted(false)
+      setTalents(previewTalents)
+      setIsTutorialOpen(true)
+      setPendingSavedGame(null)
+      hasSettledRunRef.current = false
+      scamRuinRef.current = false
+      dayMessageCandidatesRef.current = []
+      activeTabRef.current = 1
+      setActiveTab(1)
+    },
+    [buildFreshRunPreview, clearSavedGame],
+  )
+
+  const applySavedGame = useCallback(
+    (savedGame) => {
+      if (!savedGame?.isGameStarted || !savedGame?.gameState) {
+        clearSavedGame()
+        setPendingSavedGame(null)
+        return
+      }
+
+      const restoredHealthState = savedGame.healthState || savedGame.activeDebuffs || initialHealthState
+      const restoredMessages = Array.isArray(savedGame.messages || savedGame.chatHistory)
+        ? savedGame.messages || savedGame.chatHistory
+        : initialMessages
+      const restoredPhoneMessages = Array.isArray(savedGame.phoneMessages) ? savedGame.phoneMessages : []
+      const restoredPendingInvestments = Array.isArray(savedGame.pendingInvestments) ? savedGame.pendingInvestments : []
+      const restoredInventory = Array.isArray(savedGame.inventory) ? savedGame.inventory : []
+      const restoredSellerOffers = Array.isArray(savedGame.sellerOffers) ? savedGame.sellerOffers : []
+      const restoredTalents = Array.isArray(savedGame.talents || savedGame.currentTalents)
+        ? savedGame.talents || savedGame.currentTalents
+        : []
+      const restoredCurrentOptions = Array.isArray(savedGame.currentOptions) ? savedGame.currentOptions : []
+      const restoredDayMessages = Array.isArray(savedGame.dayMessageCandidates) ? savedGame.dayMessageCandidates : []
+      const restoredEventsToday = Math.max(0, Number(savedGame.eventsToday) || 0)
+      const restoredMaxEventsToday = Math.max(1, Number(savedGame.maxEventsToday) || rollMaxEventsToday())
+      const restoredSideHustlesToday = Math.max(0, Number(savedGame.sideHustlesToday) || 0)
+      const restoredInvestmentAmount = Math.max(0, Number(savedGame.investmentAmount) || 0)
+      const restoredHoldings = savedGame.holdings || initialHoldings
+      const restoredMarketPrices = savedGame.marketPrices || initialMarketPrices
+
+      setGameState(savedGame.gameState)
+      gameStateRef.current = savedGame.gameState
+      setHealthState(restoredHealthState)
+      healthStateRef.current = restoredHealthState
+      setMessages(restoredMessages)
+      messagesRef.current = restoredMessages
+      setPhoneMessages(restoredPhoneMessages)
+      phoneMessagesRef.current = restoredPhoneMessages
+      setPendingInvestments(restoredPendingInvestments)
+      pendingInvestmentsRef.current = restoredPendingInvestments
+      setInvestmentRequest(savedGame.investmentRequest || null)
+      setInvestmentAmount(restoredInvestmentAmount)
+      setLoadingHint(savedGame.loadingHint || LOADING_HINTS[0])
+      setCurrentOptions(restoredCurrentOptions)
+      setActiveFactionInvite(savedGame.activeFactionInvite || null)
+      activeFactionInviteRef.current = savedGame.activeFactionInvite || null
+      setEventsToday(restoredEventsToday)
+      eventsTodayRef.current = restoredEventsToday
+      setMaxEventsToday(restoredMaxEventsToday)
+      maxEventsTodayRef.current = restoredMaxEventsToday
+      setIsAwaitingEndDay(Boolean(savedGame.isAwaitingEndDay))
+      isAwaitingEndDayRef.current = Boolean(savedGame.isAwaitingEndDay)
+      setEndDayButtonText(savedGame.endDayButtonText || DEFAULT_END_DAY_BUTTON_TEXT)
+      setSideHustlesToday(restoredSideHustlesToday)
+      sideHustlesTodayRef.current = restoredSideHustlesToday
+      setIsLoading(false)
+      setIsScreenShaking(false)
+      setIsGameOver(false)
+      setIsVictory(false)
+      setVictoryText(savedGame.victoryText || DEFAULT_VICTORY_TEXT)
+      setIsShopOpen(false)
+      setIsMarketOpen(false)
+      setIsSellerOpen(false)
+      setIsBackpackOpen(false)
+      setIsPhoneOpen(false)
+      setShopErrorMessage('')
+      setMarketErrorMessage('')
+      setSellerErrorMessage('')
+      setBackpackErrorMessage('')
+      setMarketPrices(restoredMarketPrices)
+      marketPricesRef.current = restoredMarketPrices
+      setHoldings(restoredHoldings)
+      holdingsRef.current = restoredHoldings
+      setInventory(restoredInventory)
+      inventoryRef.current = restoredInventory
+      setSellerOffers(restoredSellerOffers)
+      setIsSoulShopOpen(false)
+      setIsAchievementsOpen(false)
+      setEndgameSummary(null)
+      setHasStarted(true)
+      setTalents(restoredTalents)
+      setIsTutorialOpen(false)
+      setPendingSavedGame(null)
+      hasSettledRunRef.current = false
+      scamRuinRef.current = Boolean(savedGame.scamRuin)
+      dayMessageCandidatesRef.current = restoredDayMessages
+      activeTabRef.current = 1
+      setActiveTab(1)
+      setApiKeyStatus('已恢复本地自动存档。')
+    },
+    [clearSavedGame],
+  )
+
+  useEffect(() => {
+    if (
+      !isApiKeyBootstrapped ||
+      isResumePromptOpen ||
+      !hasStarted ||
+      isTutorialOpen ||
+      isLoading ||
+      isGameOver ||
+      isVictory ||
+      endgameSummary
+    ) {
+      return
+    }
+
+    saveGameState()
+  }, [
+    activeFactionInvite,
+    currentOptions,
+    endDayButtonText,
+    endgameSummary,
+    eventsToday,
+    gameState,
+    hasStarted,
+    healthState,
+    holdings,
+    inventory,
+    investmentAmount,
+    investmentRequest,
+    isApiKeyBootstrapped,
+    isAwaitingEndDay,
+    isGameOver,
+    isLoading,
+    isResumePromptOpen,
+    isTutorialOpen,
+    isVictory,
+    loadingHint,
+    marketPrices,
+    messages,
+    pendingInvestments,
+    phoneMessages,
+    saveGameState,
+    sellerOffers,
+    sideHustlesToday,
+    talents,
+    maxEventsToday,
+  ])
 
   const pushToast = useCallback((message, type = 'info') => {
     const toastId = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
@@ -1204,6 +1536,7 @@ function App() {
         return
       }
       hasSettledRunRef.current = true
+      clearSavedGame()
 
       const survivedDays = Math.max(1, nextState.day)
       const soulEarned = calculateSoulPointsReward(survivedDays, nextState.money)
@@ -1234,7 +1567,7 @@ function App() {
         unlockedTitles: newlyUnlockedIds.map((id) => getAchievementTitleById(id)),
       })
     },
-    [pushToast],
+    [clearSavedGame, pushToast],
   )
 
   const appendPhoneMessages = useCallback(
@@ -1974,6 +2307,25 @@ function App() {
     }
   }
 
+  const handleResumeSavedGame = () => {
+    if (!pendingSavedGame) {
+      return
+    }
+
+    applySavedGame(pendingSavedGame)
+    pushToast('已恢复上一次自动存档。', 'info')
+  }
+
+  const handleDiscardSavedGame = () => {
+    resetRunState({ clearSave: true })
+    pushToast('已放弃上一局进度，重新进入天赋开局。', 'info')
+  }
+
+  const handleRestartRun = () => {
+    resetRunState({ clearSave: true })
+    pushToast('新的一轮打工人生已经开始。', 'info')
+  }
+
   const handleCloseEndgameSummary = () => {
     setEndgameSummary(null)
   }
@@ -1994,6 +2346,7 @@ function App() {
     setEndgameSummary(null)
     setIsSoulShopOpen(false)
     setIsAchievementsOpen(false)
+    setPendingSavedGame(null)
     setIsTutorialOpen(false)
   }
 
@@ -2421,7 +2774,8 @@ function App() {
 
   const isLowHealthWarning = gameState.energy < 20 || gameState.sanity < 20
   const isHallucinationMode = gameState.sanity < 20
-  const showApiKeyGate = isApiKeyBootstrapped && !hasApiKey
+  const showApiKeyGate = isApiKeyBootstrapped && !hasApiKey && !isResumePromptOpen
+  const showTutorialModal = hasApiKey && !isResumePromptOpen && isTutorialOpen
   const sidebarToneClass = isHallucinationMode ? 'bg-violet-50/90' : 'bg-white'
   const mainToneClass = isHallucinationMode ? 'bg-violet-50/70' : 'bg-white'
 
@@ -2669,8 +3023,15 @@ function App() {
         apiKeyStatus={apiKeyStatus}
       />
 
+      <ResumeSaveModal
+        isOpen={isResumePromptOpen}
+        savedDay={pendingSavedGame?.gameState?.day || 1}
+        onResume={handleResumeSavedGame}
+        onRestart={handleDiscardSavedGame}
+      />
+
       <TutorialModal
-        isOpen={hasApiKey && isTutorialOpen}
+        isOpen={showTutorialModal}
         onConfirm={handleConfirmTutorial}
         soulPoints={soulPoints}
         talentChoices={talentSelection.choices}
@@ -2711,6 +3072,7 @@ function App() {
         soulTotal={endgameSummary?.soulTotal || soulPoints}
         unlockedTitles={endgameSummary?.unlockedTitles || []}
         onAcknowledge={handleCloseEndgameSummary}
+        onRestart={handleRestartRun}
       />
     </div>
   )
