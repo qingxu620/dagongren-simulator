@@ -29,7 +29,7 @@ body {
 }
 
 .input-bar-safe-area {
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(1rem + var(--mobile-tab-bar-height) + env(safe-area-inset-bottom, 0px));
 }
 
 .mobile-tab-frame {
@@ -44,12 +44,19 @@ body {
 .mobile-pages-strip {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
 }
 
 .mobile-page-scroll {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   touch-action: pan-y;
+}
+
+@media (min-width: 768px) {
+  .input-bar-safe-area {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @keyframes shake {

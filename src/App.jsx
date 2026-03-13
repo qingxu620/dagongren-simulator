@@ -2439,7 +2439,7 @@ function App() {
         <div
           ref={mobilePagesRef}
           onScroll={handleMobilePagesScroll}
-          className="mobile-pages-strip flex h-full w-full flex-1 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth touch-pan-x [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="mobile-pages-strip flex h-full w-full flex-1 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
           <section
             className={`mobile-page-scroll h-full min-h-0 w-full shrink-0 snap-center snap-always overflow-y-auto ${sidebarToneClass}`}
@@ -2458,48 +2458,46 @@ function App() {
           </section>
 
           <section
-            className={`h-full min-h-0 w-full shrink-0 snap-center snap-always overflow-hidden ${mainToneClass}`}
+            className={`relative flex h-full min-h-0 w-full shrink-0 snap-center snap-always flex-col overflow-hidden ${mainToneClass}`}
           >
-            <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white">
-              <div className="flex-1 min-h-0">
-                <ChatPanel
-                  messages={messages}
-                  isLoading={isLoading}
-                  isGameOver={isGameOver}
-                  isVictory={isVictory}
-                  day={gameState.day}
-                  eventsToday={eventsToday}
-                  maxEventsToday={maxEventsToday}
-                  isAwaitingEndDay={isAwaitingEndDay}
-                  onOpenPhone={handleOpenPhone}
-                  unreadPhoneCount={unreadPhoneCount}
-                  loadingHint={loadingHint}
-                />
-              </div>
-              <InputBar
-                options={currentOptions}
-                onSelectOption={handleSelectOption}
-                onEndDay={handleEndDay}
-                onSideHustle={handleSideHustle}
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <ChatPanel
+                messages={messages}
                 isLoading={isLoading}
-                isInteractionLocked={isInteractionLocked}
                 isGameOver={isGameOver}
                 isVictory={isVictory}
-                hasApiKey={hasApiKey}
-                isAwaitingEndDay={isAwaitingEndDay}
-                endDayButtonText={endDayButtonText}
-                sideHustlesToday={sideHustlesToday}
-                sideHustleLimit={SIDE_HUSTLE_LIMIT_PER_DAY}
+                day={gameState.day}
                 eventsToday={eventsToday}
                 maxEventsToday={maxEventsToday}
-                isInvestmentInputMode={Boolean(investmentRequest)}
-                investmentAmount={investmentAmount}
-                maxInvestment={investmentRequest?.maxAmount || 0}
-                onInvestmentAmountChange={handleInvestmentAmountChange}
-                onConfirmInvestment={handleConfirmInvestment}
-                onRejectInvestment={handleRejectInvestment}
+                isAwaitingEndDay={isAwaitingEndDay}
+                onOpenPhone={handleOpenPhone}
+                unreadPhoneCount={unreadPhoneCount}
+                loadingHint={loadingHint}
               />
             </div>
+            <InputBar
+              options={currentOptions}
+              onSelectOption={handleSelectOption}
+              onEndDay={handleEndDay}
+              onSideHustle={handleSideHustle}
+              isLoading={isLoading}
+              isInteractionLocked={isInteractionLocked}
+              isGameOver={isGameOver}
+              isVictory={isVictory}
+              hasApiKey={hasApiKey}
+              isAwaitingEndDay={isAwaitingEndDay}
+              endDayButtonText={endDayButtonText}
+              sideHustlesToday={sideHustlesToday}
+              sideHustleLimit={SIDE_HUSTLE_LIMIT_PER_DAY}
+              eventsToday={eventsToday}
+              maxEventsToday={maxEventsToday}
+              isInvestmentInputMode={Boolean(investmentRequest)}
+              investmentAmount={investmentAmount}
+              maxInvestment={investmentRequest?.maxAmount || 0}
+              onInvestmentAmountChange={handleInvestmentAmountChange}
+              onConfirmInvestment={handleConfirmInvestment}
+              onRejectInvestment={handleRejectInvestment}
+            />
           </section>
 
           <section className="mobile-page-scroll h-full min-h-0 w-full shrink-0 snap-center snap-always overflow-y-auto bg-slate-50">

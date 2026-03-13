@@ -66,7 +66,13 @@ function ChatPanel({
   const progressPercent = isAwaitingEndDay ? 100 : (safeEventsToday / safeMaxEvents) * 100
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    const frameId = window.requestAnimationFrame(() => {
+      endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frameId)
+    }
   }, [messages, isLoading])
 
   return (
@@ -139,7 +145,7 @@ function ChatPanel({
         </div>
       </header>
 
-      <section className="chat-panel-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 pb-24 touch-pan-y sm:p-4 sm:pb-32">
+      <section className="chat-panel-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-6 touch-pan-y">
         {messages.map((message) => {
           const isPlayer = message.role === 'player'
 
@@ -194,7 +200,7 @@ function ChatPanel({
           </article>
         ) : null}
 
-        <div ref={endRef} />
+        <div ref={endRef} className="h-1 w-full" />
       </section>
     </div>
   )
