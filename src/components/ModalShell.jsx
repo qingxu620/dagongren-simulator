@@ -35,14 +35,17 @@ function ModalShell({
 
   return (
     <div
-      className={joinClasses('fixed inset-0 flex items-center justify-center bg-black/50 p-4 sm:p-6', zIndexClass)}
+      className={joinClasses(
+        'fixed inset-0 flex items-center justify-center overflow-hidden overscroll-none bg-black/50 p-4 sm:p-6',
+        zIndexClass,
+      )}
       onClick={closeOnOverlay && onClose ? onClose : undefined}
     >
       <div
         role="dialog"
         aria-modal="true"
         className={joinClasses(
-          'flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl',
+          'flex min-h-0 min-w-0 max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl',
           panelClassName,
         )}
         onClick={(event) => event.stopPropagation()}
@@ -59,7 +62,12 @@ function ModalHeader({ children, className = '' }) {
 
 function ModalBody({ children, className = '' }) {
   return (
-    <div className={joinClasses('modal-scroll flex-1 overflow-y-auto overscroll-contain p-4 space-y-3', className)}>
+    <div
+      className={joinClasses(
+        'modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-3',
+        className,
+      )}
+    >
       {children}
     </div>
   )
