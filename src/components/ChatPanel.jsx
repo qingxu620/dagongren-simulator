@@ -71,7 +71,7 @@ function ChatPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <header className="shrink-0 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
+      <header className="shrink-0 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-4 py-4">
         <div>
           <p className="text-sm text-slate-500">剧情对话流</p>
           <h2 className="text-lg font-bold text-slate-900">公司生存频道</h2>
@@ -139,7 +139,7 @@ function ChatPanel({
         </div>
       </header>
 
-      <section className="chat-panel-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 pb-32 touch-pan-y">
+      <section className="chat-panel-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-32 touch-pan-y">
         {messages.map((message) => {
           const isPlayer = message.role === 'player'
 

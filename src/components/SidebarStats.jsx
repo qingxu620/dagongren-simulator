@@ -103,7 +103,7 @@ function SidebarStats({
   }, [])
 
   return (
-    <aside className="w-full rounded-2xl border border-slate-200 bg-white p-4 shadow-md md:h-full md:overflow-y-auto md:p-5">
+    <aside className="min-h-0 w-full flex flex-col p-4 md:h-full md:p-5">
       <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <div className="flex items-start gap-3">
           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 text-xl font-bold text-white shadow-md">

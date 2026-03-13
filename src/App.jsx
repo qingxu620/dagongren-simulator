@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import AchievementGalleryModal from './components/AchievementGalleryModal'
+import ApiKeyGateModal from './components/ApiKeyGateModal'
 import BackpackModal from './components/BackpackModal'
 import ChatPanel from './components/ChatPanel'
 import EndgameSummaryModal from './components/EndgameSummaryModal'
@@ -952,6 +953,7 @@ function App() {
   const [apiKey, setApiKey] = useState('')
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [apiKeyStatus, setApiKeyStatus] = useState('')
+  const [isApiKeyBootstrapped, setIsApiKeyBootstrapped] = useState(false)
   const [hasStarted, setHasStarted] = useState(false)
   const [talents, setTalents] = useState([])
 
@@ -1056,6 +1058,7 @@ function App() {
       setApiKeyInput(storedKey)
       setApiKeyStatus('检测到本地已保存 Key。')
     }
+    setIsApiKeyBootstrapped(true)
   }, [])
 
   const hasApiKey = Boolean(apiKey)
@@ -2360,12 +2363,13 @@ function App() {
 
   const isLowHealthWarning = gameState.energy < 20 || gameState.sanity < 20
   const isHallucinationMode = gameState.sanity < 20
+  const showApiKeyGate = isApiKeyBootstrapped && !hasApiKey
+  const sidebarToneClass = isHallucinationMode ? 'bg-violet-50/90' : 'bg-white'
+  const mainToneClass = isHallucinationMode ? 'bg-violet-50/70' : 'bg-white'
 
   return (
     <div
-      className={`h-[100dvh] overflow-hidden overscroll-none px-3 py-3 text-slate-800 sm:px-6 sm:py-6 ${
-        isHallucinationMode ? 'bg-violet-100/80' : 'bg-slate-50'
-      } ${
+      className={`h-[100dvh] w-full flex flex-col overflow-hidden bg-slate-50 text-slate-800 md:flex-row ${
         isScreenShaking ? 'animate-screen-shake' : ''
       }`}
     >
@@ -2373,7 +2377,9 @@ function App() {
 
       {isLowHealthWarning ? <div className="pointer-events-none fixed inset-0 z-40 animate-vignette-alert" /> : null}
 
-      <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-3 lg:grid lg:grid-cols-[360px_1fr] lg:gap-4">
+      <div
+        className={`modal-scroll w-full shrink-0 flex max-h-[45dvh] min-h-0 flex-col overflow-y-auto overscroll-contain border-b border-slate-200 ${sidebarToneClass} md:w-80 md:h-full md:max-h-full md:border-b-0 md:border-r`}
+      >
         <SidebarStats
           gameState={gameState}
           healthState={healthState}
@@ -2390,8 +2396,10 @@ function App() {
           apiKeyStatus={apiKeyStatus}
           isHallucinationMode={isHallucinationMode}
         />
+      </div>
 
-        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md lg:h-full">
+      <div className={`relative flex-1 flex min-h-0 min-w-0 flex-col overflow-hidden ${mainToneClass}`}>
+        <div className="flex-1 flex min-h-0 min-w-0 flex-col">
           <ChatPanel
             messages={messages}
             isLoading={isLoading}
@@ -2405,30 +2413,30 @@ function App() {
             unreadPhoneCount={unreadPhoneCount}
             loadingHint={loadingHint}
           />
-          <InputBar
-            options={currentOptions}
-            onSelectOption={handleSelectOption}
-            onEndDay={handleEndDay}
-            onSideHustle={handleSideHustle}
-            isLoading={isLoading}
-            isInteractionLocked={isInteractionLocked}
-            isGameOver={isGameOver}
-            isVictory={isVictory}
-            hasApiKey={hasApiKey}
-            isAwaitingEndDay={isAwaitingEndDay}
-            endDayButtonText={endDayButtonText}
-            sideHustlesToday={sideHustlesToday}
-            sideHustleLimit={SIDE_HUSTLE_LIMIT_PER_DAY}
-            eventsToday={eventsToday}
-            maxEventsToday={maxEventsToday}
-            isInvestmentInputMode={Boolean(investmentRequest)}
-            investmentAmount={investmentAmount}
-            maxInvestment={investmentRequest?.maxAmount || 0}
-            onInvestmentAmountChange={handleInvestmentAmountChange}
-            onConfirmInvestment={handleConfirmInvestment}
-            onRejectInvestment={handleRejectInvestment}
-          />
         </div>
+        <InputBar
+          options={currentOptions}
+          onSelectOption={handleSelectOption}
+          onEndDay={handleEndDay}
+          onSideHustle={handleSideHustle}
+          isLoading={isLoading}
+          isInteractionLocked={isInteractionLocked}
+          isGameOver={isGameOver}
+          isVictory={isVictory}
+          hasApiKey={hasApiKey}
+          isAwaitingEndDay={isAwaitingEndDay}
+          endDayButtonText={endDayButtonText}
+          sideHustlesToday={sideHustlesToday}
+          sideHustleLimit={SIDE_HUSTLE_LIMIT_PER_DAY}
+          eventsToday={eventsToday}
+          maxEventsToday={maxEventsToday}
+          isInvestmentInputMode={Boolean(investmentRequest)}
+          investmentAmount={investmentAmount}
+          maxInvestment={investmentRequest?.maxAmount || 0}
+          onInvestmentAmountChange={handleInvestmentAmountChange}
+          onConfirmInvestment={handleConfirmInvestment}
+          onRejectInvestment={handleRejectInvestment}
+        />
       </div>
 
       <ShopModal
@@ -2479,8 +2487,16 @@ function App() {
 
       <PhoneDrawer isOpen={isPhoneOpen} onClose={handleClosePhone} messages={phoneMessages} />
 
+      <ApiKeyGateModal
+        isOpen={showApiKeyGate}
+        apiKeyInput={apiKeyInput}
+        onApiKeyInputChange={setApiKeyInput}
+        onSaveApiKey={handleSaveApiKey}
+        apiKeyStatus={apiKeyStatus}
+      />
+
       <TutorialModal
-        isOpen={isTutorialOpen}
+        isOpen={hasApiKey && isTutorialOpen}
         onConfirm={handleConfirmTutorial}
         soulPoints={soulPoints}
         talentChoices={talentSelection.choices}
