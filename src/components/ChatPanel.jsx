@@ -58,7 +58,7 @@ function ChatPanel({
   unreadPhoneCount = 0,
   loadingHint = '命运齿轮转动中...',
 }) {
-  const endRef = useRef(null)
+  const scrollContainerRef = useRef(null)
   const safeMaxEvents = Math.max(1, maxEventsToday)
   const safeEventsToday = Math.max(0, Math.min(eventsToday, safeMaxEvents))
   const currentTimelineIndex = getCurrentTimelineIndex(safeEventsToday, safeMaxEvents, isAwaitingEndDay)
@@ -67,7 +67,15 @@ function ChatPanel({
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
-      endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+      const container = scrollContainerRef.current
+      if (!container) {
+        return
+      }
+
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth',
+      })
     })
 
     return () => {
@@ -145,7 +153,10 @@ function ChatPanel({
         </div>
       </header>
 
-      <section className="chat-panel-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-6 touch-pan-y">
+      <section
+        ref={scrollContainerRef}
+        className="chat-panel-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-2 touch-pan-y"
+      >
         {messages.map((message) => {
           const isPlayer = message.role === 'player'
 
@@ -199,8 +210,6 @@ function ChatPanel({
             </div>
           </article>
         ) : null}
-
-        <div ref={endRef} className="h-1 w-full" />
       </section>
     </div>
   )

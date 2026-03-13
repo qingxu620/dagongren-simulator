@@ -2460,21 +2460,19 @@ function App() {
           <section
             className={`relative flex h-full min-h-0 w-full shrink-0 snap-center snap-always flex-col overflow-hidden ${mainToneClass}`}
           >
-            <div className="min-h-0 flex-1 overflow-hidden">
-              <ChatPanel
-                messages={messages}
-                isLoading={isLoading}
-                isGameOver={isGameOver}
-                isVictory={isVictory}
-                day={gameState.day}
-                eventsToday={eventsToday}
-                maxEventsToday={maxEventsToday}
-                isAwaitingEndDay={isAwaitingEndDay}
-                onOpenPhone={handleOpenPhone}
-                unreadPhoneCount={unreadPhoneCount}
-                loadingHint={loadingHint}
-              />
-            </div>
+            <ChatPanel
+              messages={messages}
+              isLoading={isLoading}
+              isGameOver={isGameOver}
+              isVictory={isVictory}
+              day={gameState.day}
+              eventsToday={eventsToday}
+              maxEventsToday={maxEventsToday}
+              isAwaitingEndDay={isAwaitingEndDay}
+              onOpenPhone={handleOpenPhone}
+              unreadPhoneCount={unreadPhoneCount}
+              loadingHint={loadingHint}
+            />
             <InputBar
               options={currentOptions}
               onSelectOption={handleSelectOption}
