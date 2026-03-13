@@ -102,74 +102,55 @@ function SidebarStats({
   }, [])
 
   return (
-    <aside className="flex min-h-0 w-full flex-col gap-4 p-4 md:h-full md:gap-5 md:p-5">
-      <section className="rounded-3xl border border-slate-200 bg-slate-50 p-4 shadow-sm md:p-5">
-        <div className="flex items-start gap-3 md:gap-4">
-          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 text-2xl font-bold text-white shadow-md md:h-20 md:w-20 md:text-4xl">
+    <aside className="flex min-h-0 w-full min-w-0 flex-col gap-4 p-4 md:h-full md:gap-3 md:p-4">
+      <section className="rounded-3xl border border-slate-200 bg-slate-50 p-4 shadow-sm md:p-3">
+        <div className="flex flex-row items-center gap-3 md:mb-2">
+          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 text-2xl font-bold text-white shadow-md md:h-10 md:w-10 md:rounded-xl md:text-xl">
             打
           </div>
 
           <div className="min-w-0 flex-1">
             <p className="text-xs uppercase tracking-[0.22em] text-sky-600">Day {gameState.day}</p>
-            <h1 className={`mt-1 text-lg font-bold md:text-[2rem] ${isHallucinationMode ? 'text-violet-700' : 'text-slate-900'}`}>
+            <h1 className={`mt-0.5 text-lg font-bold leading-tight ${isHallucinationMode ? 'text-violet-700' : 'text-slate-900'}`}>
               {isHallucinationMode ? '打工人模拟器 · 幻觉模式' : '打工人模拟器'}
             </h1>
-            <p className="mt-1 text-xs text-slate-500 sm:text-sm md:max-w-xs md:text-base">
-              你的职场生存值正在实时变化
-            </p>
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
-                <Sparkles size={12} />
-                智慧 {gameState.wisdom}
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                帮派：{gameState.faction || '无党派牛马'}
-              </span>
-              <span
-                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${
-                  healthState?.sick ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                }`}
-              >
-                <Activity size={12} />
-                {healthState?.sick ? `生病 ${healthState.sickDays} 天` : '未生病'}
-              </span>
-              <span
-                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${
-                  healthState?.depressed
-                    ? 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700'
-                    : 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                }`}
-              >
-                <Activity size={12} />
-                {healthState?.depressed ? `抑郁 ${healthState.depressedDays} 天` : '心态稳定'}
-              </span>
-            </div>
-
-            <div className="mt-3">
-              <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Talents</p>
-              <div className="flex flex-wrap gap-2">
-                {talents.length ? (
-                  talents.map((talent) => (
-                    <span
-                      key={talent}
-                      className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700"
-                    >
-                      {talent}
-                    </span>
-                  ))
-                ) : (
-                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
-                    暂无天赋
-                  </span>
-                )}
-              </div>
-            </div>
           </div>
         </div>
+
+        <div className="mt-2 flex flex-wrap gap-2 md:mt-1.5 md:gap-1.5">
+          <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 md:px-2 md:py-0.5 md:text-[11px]">
+            <Sparkles size={12} />
+            智慧 {gameState.wisdom}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 md:px-2 md:py-0.5 md:text-[11px]">
+            帮派：{gameState.faction || '无党派牛马'}
+          </span>
+          <span
+            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium md:px-2 md:py-0.5 md:text-[11px] ${
+              healthState?.sick ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+            }`}
+          >
+            <Activity size={12} />
+            {healthState?.sick ? `生病 ${healthState.sickDays} 天` : '未生病'}
+          </span>
+          <span
+            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium md:px-2 md:py-0.5 md:text-[11px] ${
+              healthState?.depressed
+                ? 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700'
+                : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+            }`}
+          >
+            <Activity size={12} />
+            {healthState?.depressed ? `抑郁 ${healthState.depressedDays} 天` : '心态稳定'}
+          </span>
+        </div>
+
+        <p className="mt-2 text-xs leading-relaxed text-slate-500 md:mt-1.5 md:text-[11px] md:leading-5">
+          天赋：{talents.length ? talents.join('，') : '暂无'}
+        </p>
       </section>
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-1 md:gap-4">
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-1 md:gap-2">
         {statConfigs.map((item) => {
           const Icon = item.icon
           const value = Number(gameState[item.key] ?? 0)
@@ -178,14 +159,14 @@ function SidebarStats({
           const localFloaters = floaters.filter((floater) => floater.key === item.key)
 
           return (
-            <div key={item.key} className="relative rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:p-4">
-              <div className="mb-2 flex items-start justify-between gap-3 md:mb-3">
-                <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-slate-700 md:text-base">
-                  <Icon size={16} className="shrink-0 text-sky-500 md:h-[18px] md:w-[18px]" />
+            <div key={item.key} className="relative rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:px-3 md:py-2">
+              <div className="mb-2 flex items-start justify-between gap-3 md:mb-1.5">
+                <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-slate-700 md:text-sm">
+                  <Icon size={16} className="shrink-0 text-sky-500" />
                   <span className="whitespace-normal break-words">{item.label}</span>
                 </div>
 
-                <div className="relative shrink-0 text-sm font-semibold text-slate-900 md:text-base">
+                <div className="relative shrink-0 text-sm font-semibold text-slate-900 md:text-sm">
                   <span>
                     {displayValue}
                     <span className="ml-0.5 text-slate-500">{item.suffix}</span>
@@ -205,7 +186,7 @@ function SidebarStats({
                 </div>
               </div>
 
-              <div className="h-2.5 overflow-hidden rounded-full bg-slate-200 md:h-3">
+              <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
                 <div className={`h-full rounded-full ${item.color}`} style={{ width: `${percent}%` }} />
               </div>
             </div>
@@ -214,13 +195,13 @@ function SidebarStats({
       </section>
 
       {showSystemSection ? (
-        <section className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-          <div className="flex flex-row gap-2 overflow-x-auto md:flex-col md:gap-3 md:overflow-visible">
+        <section className="rounded-3xl border border-slate-200 bg-slate-50 p-4 md:p-3">
+          <div className="flex flex-row gap-2 overflow-x-auto md:flex-col md:gap-2 md:overflow-visible">
             <button
               type="button"
               onClick={onOpenShop}
               disabled={isInteractionLocked}
-              className="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 md:h-14 md:justify-start"
+              className="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 md:h-11 md:justify-start md:text-sm"
             >
               <ShoppingCart size={16} />
               <span>便利店</span>
@@ -229,7 +210,7 @@ function SidebarStats({
               type="button"
               onClick={onOpenMarket}
               disabled={isInteractionLocked}
-              className="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 md:h-14 md:justify-start"
+              className="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 md:h-11 md:justify-start md:text-sm"
             >
               <LineChart size={16} />
               <span>摸鱼炒股</span>
@@ -238,21 +219,21 @@ function SidebarStats({
               type="button"
               onClick={onOpenBackpack}
               disabled={isInteractionLocked}
-              className="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-4 text-sm font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 md:h-14 md:justify-start"
+              className="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-4 text-sm font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 md:h-11 md:justify-start md:text-sm"
             >
               <ShoppingBag size={16} />
               <span>我的背包</span>
             </button>
           </div>
 
-          <p className="mt-3 text-xs leading-relaxed text-slate-500">
+          <p className="mt-2 text-xs leading-relaxed text-slate-500 md:text-[11px]">
             商店、股市和背包入口都在这里。{isVictory ? ' 通关后交易功能会关闭。' : ''}
           </p>
         </section>
       ) : null}
 
-      <section className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-        <div className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700 md:text-base">
+      <section className="rounded-3xl border border-slate-200 bg-slate-50 p-4 md:p-3">
+        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
           <KeyRound size={16} className="text-sky-500" />
           DeepSeek API Key
         </div>
@@ -262,23 +243,23 @@ function SidebarStats({
             type="password"
             value={apiKeyInput}
             onChange={(event) => onApiKeyInputChange(event.target.value)}
-            className="h-11 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none ring-sky-300/70 transition focus:ring-2"
+            className="h-10 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none ring-sky-300/70 transition focus:ring-2"
             placeholder="输入 sk-... 开头的 Key"
           />
           <button
             type="button"
             onClick={onSaveApiKey}
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-sky-500 px-4 text-sm font-semibold text-white transition hover:bg-sky-400 md:w-auto md:min-w-28"
+            className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-sky-500 px-4 text-sm font-semibold text-white transition hover:bg-sky-400 md:w-auto md:min-w-24"
           >
             <Save size={14} />
             保存
           </button>
         </div>
 
-        <p className={`mt-3 text-sm ${hasApiKey ? 'text-emerald-600' : 'text-slate-500'}`}>
+        <p className={`mt-2 text-xs md:text-[11px] ${hasApiKey ? 'text-emerald-600' : 'text-slate-500'}`}>
           {hasApiKey ? '已保存到当前浏览器 localStorage。' : '尚未保存 API Key。'}
         </p>
-        {apiKeyStatus ? <p className="mt-1 text-sm text-sky-600">{apiKeyStatus}</p> : null}
+        {apiKeyStatus ? <p className="mt-1 text-xs text-sky-600 md:text-[11px]">{apiKeyStatus}</p> : null}
       </section>
     </aside>
   )
