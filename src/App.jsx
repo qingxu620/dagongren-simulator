@@ -2551,7 +2551,7 @@ function App() {
 
       <div className="hidden h-full min-h-0 w-full md:flex">
         <div
-          className={`modal-scroll w-80 shrink-0 overflow-y-auto border-r border-slate-200 ${sidebarToneClass}`}
+          className={`modal-scroll w-80 shrink-0 overflow-y-auto border-r border-slate-200 md:w-[350px] ${sidebarToneClass}`}
         >
           <SidebarStats
             gameState={gameState}
