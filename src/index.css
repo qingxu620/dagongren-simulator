@@ -12,7 +12,7 @@ body {
 }
 
 :root {
-  --mobile-tab-bar-height: 6rem;
+  --mobile-tab-bar-height: 3.5rem;
 }
 
 .chat-panel-scroll {
@@ -29,7 +29,7 @@ body {
 }
 
 .input-bar-safe-area {
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px));
 }
 
 .mobile-tab-frame {
@@ -38,7 +38,7 @@ body {
 
 .mobile-tab-bar {
   min-height: calc(var(--mobile-tab-bar-height) + env(safe-area-inset-bottom, 0px));
-  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px));
 }
 
 .mobile-pages-strip {

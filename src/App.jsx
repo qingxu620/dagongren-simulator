@@ -3427,36 +3427,36 @@ function App() {
         </div>
       </div>
 
-      <nav className="mobile-tab-bar fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-4 pt-3 backdrop-blur md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-3 gap-2 rounded-3xl border border-slate-200 bg-white/90 p-2 shadow-lg">
+      <nav className="mobile-tab-bar fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-3 pt-0.5 backdrop-blur md:hidden">
+        <div className="mx-auto grid h-[50px] max-w-md grid-cols-3 gap-1 rounded-[1.25rem] border border-slate-200 bg-white/90 p-1 shadow-lg">
           <button
             type="button"
             onClick={() => scrollToMobileTab(0)}
-            className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-semibold transition ${
+            className={`flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-semibold leading-none transition ${
               activeTab === 0 ? 'bg-slate-900 text-white' : 'text-slate-500'
             }`}
           >
-            <BarChart3 size={18} />
+            <BarChart3 size={16} />
             <span>状态</span>
           </button>
           <button
             type="button"
             onClick={() => scrollToMobileTab(1)}
-            className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-semibold transition ${
+            className={`flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-semibold leading-none transition ${
               activeTab === 1 ? 'bg-slate-900 text-white' : 'text-slate-500'
             }`}
           >
-            <MessageSquare size={18} />
+            <MessageSquare size={16} />
             <span>打工</span>
           </button>
           <button
             type="button"
             onClick={() => scrollToMobileTab(2)}
-            className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-semibold transition ${
+            className={`flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-semibold leading-none transition ${
               activeTab === 2 ? 'bg-slate-900 text-white' : 'text-slate-500'
             }`}
           >
-            <ShoppingCart size={18} />
+            <ShoppingCart size={16} />
             <span>广场</span>
           </button>
         </div>

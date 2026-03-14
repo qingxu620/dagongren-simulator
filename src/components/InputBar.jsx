@@ -9,7 +9,7 @@ function InputBar({
   isVictory,
   hasApiKey,
   isAwaitingEndDay = false,
-  endDayButtonText = '🌙 终于熬到头了，打卡下班！',
+  endDayButtonText = '🎯 终于熬到头了，打卡下班！',
   sideHustlesToday = 0,
   sideHustleLimit = 2,
   eventsToday = 0,
@@ -43,27 +43,29 @@ function InputBar({
         : isInvestmentInputMode
           ? '这是一个需要输入金额的高风险事件，请谨慎操作。'
           : isAwaitingEndDay
-            ? '今天的事件已处理完，点击按钮进行下班结算。'
+            ? '今天的事件已经处理完，点击按钮进行下班结算。'
             : options.length === 0 && !isLoading
               ? '等待 AI 生成本回合选项...'
               : null
 
   return (
     <footer className="input-bar-safe-area z-10 w-full shrink-0 border-t border-slate-200 bg-slate-50 px-3 py-2 md:bg-white md:px-4 md:py-4">
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[13px] font-semibold text-slate-700 sm:text-sm">{isInvestmentInputMode ? '投资决策区' : '本回合行动区'}</p>
-        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-500 sm:px-3 sm:py-1 sm:text-xs">
+      <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2 md:mb-2">
+        <p className="text-[12px] font-semibold text-slate-700 md:text-sm">
+          {isInvestmentInputMode ? '投资决策区' : '本回合行动区'}
+        </p>
+        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500 md:px-3 md:py-1 md:text-xs">
           今日事件 {Math.min(eventsToday, safeMaxEvents)}/{safeMaxEvents}
         </span>
       </div>
 
       {!isInvestmentInputMode ? (
-        <div className="mb-2">
+        <div className="my-1 md:my-0 md:mb-3">
           <button
             type="button"
             onClick={onSideHustle}
             disabled={!canSideHustle}
-            className="h-9 w-full rounded-2xl border border-emerald-300 bg-emerald-50 px-3 text-sm font-medium text-emerald-700 shadow-sm transition hover:border-emerald-400 hover:bg-emerald-100 hover:shadow disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 sm:h-12 sm:w-auto sm:px-4"
+            className="w-full rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-[13px] font-medium leading-snug text-emerald-700 shadow-sm transition hover:border-emerald-400 hover:bg-emerald-100 hover:shadow disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 md:w-auto md:rounded-2xl md:px-4 md:py-2 md:text-base"
           >
             📦 疯狂接私活 ({sideHustlesToday}/{sideHustleLimit})
           </button>
@@ -71,10 +73,12 @@ function InputBar({
       ) : null}
 
       {isInvestmentInputMode ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <p className="text-sm text-slate-700">输入你要打款的金额（上限：${maxInvestment.toFixed(2)}）</p>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 md:p-4">
+          <p className="text-[13px] text-slate-700 md:text-sm">
+            输入你要打款的金额（上限：{maxInvestment.toFixed(2)}）
+          </p>
 
-          <div className="mt-3 space-y-3">
+          <div className="mt-2 space-y-2 md:mt-3 md:space-y-3">
             <input
               type="range"
               min={0}
@@ -94,17 +98,17 @@ function InputBar({
               value={safeInvestmentAmount}
               onChange={(event) => onInvestmentAmountChange?.(Number(event.target.value))}
               disabled={!canInvest}
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none ring-amber-300/70 transition focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-100"
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none ring-amber-300/70 transition focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-100 md:h-11"
               placeholder="输入投资金额"
             />
           </div>
 
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <div className="mt-3 grid gap-2 md:mt-4 md:grid-cols-2">
             <button
               type="button"
               onClick={() => onConfirmInvestment?.(safeInvestmentAmount)}
               disabled={!canInvest}
-              className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+              className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-[13px] font-medium text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 md:py-3 md:text-sm"
             >
               确认打款
             </button>
@@ -112,7 +116,7 @@ function InputBar({
               type="button"
               onClick={onRejectInvestment}
               disabled={isInteractionLocked || !hasApiKey}
-              className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+              className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-[13px] font-medium text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 md:py-3 md:text-sm"
             >
               滚蛋骗子
             </button>
@@ -124,33 +128,33 @@ function InputBar({
             type="button"
             onClick={onEndDay}
             disabled={!canEndDay}
-            className="w-full max-w-xl rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-center text-sm font-semibold text-indigo-700 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-100 hover:shadow disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 sm:rounded-2xl sm:px-6 sm:py-4"
+            className="w-full max-w-xl rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-center text-[13px] font-semibold leading-snug text-indigo-700 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-100 hover:shadow disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 md:rounded-2xl md:px-6 md:py-4 md:text-base"
           >
             {endDayButtonText}
           </button>
         </div>
       ) : isLoading ? (
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid gap-1.5 md:grid-cols-3 md:gap-3">
           {Array.from({ length: 3 }).map((_, index) => (
             <button
               key={`loading-${index}`}
               type="button"
               disabled
-              className="rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-left text-[13px] font-medium leading-tight text-slate-400 shadow-sm sm:min-h-12 sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm sm:leading-normal"
+              className="rounded-xl border border-slate-200 bg-slate-100 px-3 py-1.5 text-left text-[13px] font-medium leading-snug text-slate-400 shadow-sm md:min-h-12 md:rounded-2xl md:px-4 md:py-3 md:text-base md:leading-normal"
             >
               {`选项${String.fromCharCode(65 + index)}：处理中...`}
             </button>
           ))}
         </div>
       ) : (
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid gap-1.5 md:grid-cols-3 md:gap-3">
           {options.map((item, index) => (
             <button
               key={`${item}-${index}`}
               type="button"
               onClick={() => onSelectOption(item)}
               disabled={!canSelectOption}
-              className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-left text-[13px] font-medium leading-tight text-slate-800 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:shadow disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 sm:min-h-12 sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm sm:leading-normal"
+              className="rounded-xl border border-blue-200 bg-white px-3 py-1.5 text-left text-[13px] font-medium leading-snug text-slate-800 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:shadow disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 md:min-h-12 md:rounded-2xl md:px-4 md:py-3 md:text-base md:leading-normal"
             >
               {`选项${String.fromCharCode(65 + index)}：${item}`}
             </button>
@@ -158,8 +162,8 @@ function InputBar({
         </div>
       )}
 
-      {isLoading ? <p className="mt-2 text-xs text-blue-600 sm:text-sm">AI 正在处理中...</p> : null}
-      {helperText ? <p className="mt-2 text-xs text-slate-400">{helperText}</p> : null}
+      {isLoading ? <p className="mt-1 text-[11px] text-blue-600 md:mt-2 md:text-sm">AI 正在处理中...</p> : null}
+      {helperText ? <p className="mt-1 hidden text-xs text-slate-400 md:block">{helperText}</p> : null}
     </footer>
   )
 }

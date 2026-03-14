@@ -65,6 +65,9 @@ function ChatPanel({
   const currentTimelineIndex = getCurrentTimelineIndex(safeEventsToday, safeMaxEvents, isAwaitingEndDay)
   const currentTimelineLabel = timelineLabels[currentTimelineIndex]
   const progressPercent = isAwaitingEndDay ? 100 : (safeEventsToday / safeMaxEvents) * 100
+  const currentThemeName = currentDailyTheme?.name || '办公室空气平静得可疑'
+  const currentThemeDescription =
+    currentDailyTheme?.description || '今天暂时没有明确风向，危险与机会都藏在细节里。'
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -86,54 +89,79 @@ function ChatPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <header className="shrink-0 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-3 py-2.5 sm:px-4 sm:py-4">
-        <div className="min-w-0 flex-1">
-          <p className="text-sm text-slate-500">剧情对话流</p>
-          <h2 className="text-base font-bold text-slate-900 sm:text-lg">公司生存频道</h2>
-          <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-600">
-              <span className="font-semibold text-slate-700">Day {day}</span>
-              <span>时段：{currentTimelineLabel}</span>
+      <header className="relative shrink-0 border-b border-slate-200 px-3 py-2 md:flex md:flex-wrap md:items-start md:justify-between md:gap-3 md:px-4 md:py-4">
+        <div className="min-w-0 pr-12 md:flex-1 md:pr-0">
+          <div className="hidden md:block">
+            <p className="text-sm text-slate-500">剧情对话流</p>
+            <h2 className="text-base font-bold text-slate-900 sm:text-lg">公司生存频道</h2>
+            <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-600">
+                <span className="font-semibold text-slate-700">Day {day}</span>
+                <span>时段：{currentTimelineLabel}</span>
+                <span>
+                  进度 {safeEventsToday}/{safeMaxEvents}
+                </span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 via-sky-400 to-indigo-500 transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <div className="mt-2 grid grid-cols-3 gap-2 text-center text-[11px]">
+                {timelineLabels.map((label, index) => {
+                  const isDone =
+                    index < currentTimelineIndex || (isAwaitingEndDay && index === currentTimelineIndex)
+                  const isCurrent = index === currentTimelineIndex && !isAwaitingEndDay
+                  return (
+                    <span
+                      key={label}
+                      className={`rounded-full px-2 py-1 font-medium ${
+                        isDone
+                          ? 'bg-indigo-100 text-indigo-700'
+                          : isCurrent
+                            ? 'bg-sky-100 text-sky-700'
+                            : 'bg-slate-100 text-slate-400'
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="md:hidden">
+            <div className="flex items-center gap-1 text-[11px] font-medium text-slate-600">
+              <span className="font-semibold text-slate-800">Day {day}</span>
+              <span className="text-slate-300">•</span>
+              <span>{currentTimelineLabel}</span>
+              <span className="text-slate-300">•</span>
               <span>
-                进度 {safeEventsToday}/{safeMaxEvents}
+                {safeEventsToday}/{safeMaxEvents}
               </span>
             </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+            <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-200">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-amber-400 via-sky-400 to-indigo-500 transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <div className="mt-2 grid grid-cols-3 gap-2 text-center text-[10px] sm:text-[11px]">
-              {timelineLabels.map((label, index) => {
-                const isDone = index < currentTimelineIndex || (isAwaitingEndDay && index === currentTimelineIndex)
-                const isCurrent = index === currentTimelineIndex && !isAwaitingEndDay
-                return (
-                  <span
-                    key={label}
-                    className={`rounded-full px-2 py-1 font-medium ${
-                      isDone
-                        ? 'bg-indigo-100 text-indigo-700'
-                        : isCurrent
-                          ? 'bg-sky-100 text-sky-700'
-                          : 'bg-slate-100 text-slate-400'
-                    }`}
-                  >
-                    {label}
-                  </span>
-                )
-              })}
+            <div className="mt-1 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              <p className="pr-2 text-[11px] font-medium text-sky-700">{`🎭 主题：${currentThemeName}`}</p>
             </div>
           </div>
         </div>
-        <div className="flex w-full shrink-0 items-center justify-between gap-2 sm:w-auto sm:justify-start">
+
+        <div className="absolute right-3 top-2 flex items-center gap-2 md:static md:w-auto md:shrink-0">
           <button
             type="button"
             onClick={onOpenPhone}
-            className="relative inline-flex h-8 items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 sm:h-9"
+            className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 md:h-9 md:w-auto md:gap-1 md:rounded-xl md:px-3 md:text-xs md:font-medium"
           >
-            <Smartphone size={14} />
-            📱 手机
+            <Smartphone size={15} />
+            <span className="hidden md:inline">手机</span>
             {unreadPhoneCount > 0 ? (
               <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white">
                 {unreadPhoneCount > 99 ? '99+' : unreadPhoneCount}
@@ -141,7 +169,7 @@ function ChatPanel({
             ) : null}
           </button>
           <span
-            className={`rounded-full px-3 py-1 text-xs ${
+            className={`hidden rounded-full px-3 py-1 text-xs md:inline-flex ${
               isVictory
                 ? 'border border-emerald-300 bg-emerald-50 text-emerald-700'
                 : isGameOver
@@ -154,42 +182,40 @@ function ChatPanel({
         </div>
       </header>
 
-      <div className="z-20 flex w-full shrink-0 flex-col items-center justify-center gap-1 border-b border-blue-100 bg-blue-50/80 p-3 text-center backdrop-blur">
-          <p className="text-sm font-semibold text-slate-900 sm:text-base">
-            {`📅 Day ${day} | 🎭 今日主题：${currentDailyTheme?.name || '办公室空气平静得可疑'}`}
-          </p>
-          <p className="max-w-3xl text-xs leading-relaxed text-slate-500">
-            {currentDailyTheme?.description || '今天暂时没有明确风向，危险与机会都藏在细节里。'}
-          </p>
+      <div className="hidden w-full shrink-0 border-b border-blue-100 bg-blue-50/80 p-3 text-center backdrop-blur md:flex md:flex-col md:items-center md:justify-center md:gap-1">
+        <p className="text-sm font-semibold text-slate-900 sm:text-base">
+          {`📅 Day ${day} | 🎭 今日主题：${currentThemeName}`}
+        </p>
+        <p className="max-w-3xl text-xs leading-relaxed text-slate-500">{currentThemeDescription}</p>
       </div>
 
       <section
         ref={scrollContainerRef}
-        className="chat-panel-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-2 touch-pan-y"
+        className="chat-panel-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 pb-2 touch-pan-y md:p-4"
       >
         {messages.map((message) => {
           const isPlayer = message.role === 'player'
 
           return (
-            <article key={message.id} className={`mb-3 flex ${isPlayer ? 'justify-end' : 'justify-start'}`}>
+            <article key={message.id} className={`mb-2.5 flex md:mb-3 ${isPlayer ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-xl rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+                className={`max-w-xl rounded-2xl px-3 py-2.5 text-[13px] leading-snug shadow-sm md:px-4 md:py-3 md:text-sm md:leading-relaxed ${
                   isPlayer
                     ? 'rounded-br-sm bg-sky-500 text-white'
                     : 'rounded-bl-sm border border-slate-200 bg-white text-slate-800'
                 }`}
               >
-                <p className={`mb-1 text-xs ${isPlayer ? 'text-sky-100' : 'text-slate-500'}`}>
+                <p className={`mb-1 text-[11px] md:text-xs ${isPlayer ? 'text-sky-100' : 'text-slate-500'}`}>
                   {isPlayer ? '你' : '系统'}
                 </p>
                 <p>{message.content}</p>
 
                 {!isPlayer && message.changes ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-2 flex flex-wrap gap-1.5 md:mt-3 md:gap-2">
                     {changeLabels.map(([key, label]) => (
                       <span
                         key={key}
-                        className={`rounded-full border px-2 py-0.5 text-xs ${getChangeClass(message.changes[key])}`}
+                        className={`rounded-full border px-2 py-0.5 text-[11px] md:text-xs ${getChangeClass(message.changes[key])}`}
                       >
                         {label} {formatChange(message.changes[key])}
                       </span>
@@ -203,8 +229,8 @@ function ChatPanel({
 
         {isLoading ? (
           <article className="flex justify-start">
-            <div className="max-w-xl rounded-2xl rounded-bl-sm border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-slate-700 shadow-sm">
-              <p className="mb-1 text-xs text-slate-500">系统</p>
+            <div className="max-w-xl rounded-2xl rounded-bl-sm border border-sky-200 bg-sky-50 px-3 py-2.5 text-[13px] text-slate-700 shadow-sm md:px-4 md:py-3 md:text-sm">
+              <p className="mb-1 text-[11px] text-slate-500 md:text-xs">系统</p>
               <p className="mb-2 animate-pulse">💬 {loadingText}</p>
               <div className="flex items-center gap-1">
                 <span className="h-2 w-2 animate-bounce rounded-full bg-sky-400" />
