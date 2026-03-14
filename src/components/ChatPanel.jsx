@@ -51,6 +51,7 @@ function ChatPanel({
   isGameOver,
   isVictory,
   day = 1,
+  currentDailyTheme = null,
   eventsToday = 0,
   maxEventsToday = 0,
   isAwaitingEndDay = false,
@@ -152,6 +153,15 @@ function ChatPanel({
           </span>
         </div>
       </header>
+
+      <div className="z-20 flex w-full shrink-0 flex-col items-center justify-center gap-1 border-b border-blue-100 bg-blue-50/80 p-3 text-center backdrop-blur">
+          <p className="text-sm font-semibold text-slate-900 sm:text-base">
+            {`📅 Day ${day} | 🎭 今日主题：${currentDailyTheme?.name || '办公室空气平静得可疑'}`}
+          </p>
+          <p className="max-w-3xl text-xs leading-relaxed text-slate-500">
+            {currentDailyTheme?.description || '今天暂时没有明确风向，危险与机会都藏在细节里。'}
+          </p>
+      </div>
 
       <section
         ref={scrollContainerRef}

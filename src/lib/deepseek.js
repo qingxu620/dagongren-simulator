@@ -214,6 +214,18 @@ function normalizeStatChanges(rawStatChanges) {
   }
 }
 
+function buildDailyThemePrompt(dailyTheme) {
+  const themeName = typeof dailyTheme?.name === 'string' ? dailyTheme.name.trim() : ''
+  const themeDescription =
+    typeof dailyTheme?.description === 'string' ? dailyTheme.description.trim() : ''
+
+  if (!themeName || !themeDescription) {
+    return ''
+  }
+
+  return `【今日职场氛围基调】：${themeName} - ${themeDescription}。你的核心指令：你今天生成的所有突发事件、或者对玩家选项的后果判定，都必须隐晦或直接地呼应这个氛围基调！让玩家感受到今天发生的每一件小事，都是在这个大背景下发生的！`
+}
+
 function normalizeResolutionResult(rawResult) {
   const narrative =
     typeof rawResult?.narrative === 'string' && rawResult.narrative.trim()
@@ -293,7 +305,7 @@ ${talentText}
 ${inventoryText}`
 }
 
-function buildSystemPrompt({ mode, gameState, talents, inventory, intraDayContext }) {
+function buildSystemPrompt({ mode, gameState, talents, inventory, intraDayContext, dailyTheme }) {
   let rules = DAILY_SYSTEM_RULES
   if (mode === 'fortune_teller') {
     rules = FORTUNE_TELLER_SYSTEM_RULES
@@ -307,12 +319,14 @@ function buildSystemPrompt({ mode, gameState, talents, inventory, intraDayContex
   const intraDayRules = intraDayContext
     ? `\n[日内事件进度]\n当前是今天的第 ${intraDayContext.eventIndex} 个事件，今天预计共 ${intraDayContext.maxEventsToday} 个事件，当前时段约为 ${intraDayContext.period || '上午'}。请根据该时段生成对应剧情。`
     : ''
+  const dailyThemeRules = buildDailyThemePrompt(dailyTheme)
   const hallucinationRules = gameState.sanity < 20 ? `\n${HALLUCINATION_SYSTEM_RULES}` : ''
 
   return `${rules.replaceAll('{luck}', String(gameState.luck)).replaceAll('{faction}', gameState.faction || '无党派牛马')}
 ${luckRules}
 ${factionRules}
 ${intraDayRules}
+${dailyThemeRules ? `\n${dailyThemeRules}` : ''}
 ${hallucinationRules}
 
 ${buildPlayerContext({ gameState, talents, inventory })}
@@ -333,6 +347,7 @@ export async function requestDeepSeekTurn({
   inventory = [],
   mode = 'daily_workplace',
   intraDayContext = null,
+  dailyTheme = null,
 }) {
   const historyMessages = history.slice(-10).map((item) => ({
     role: item.role === 'player' ? 'user' : 'assistant',
@@ -354,6 +369,7 @@ export async function requestDeepSeekTurn({
       faction: gameState.faction || '无党派牛马',
     },
     talents,
+    dailyTheme,
     intraDayContext,
     inventory: inventory.map((item) => ({
       name: item.name,
@@ -382,7 +398,7 @@ export async function requestDeepSeekTurn({
       messages: [
         {
           role: 'system',
-          content: buildSystemPrompt({ mode, gameState, talents, inventory, intraDayContext }),
+          content: buildSystemPrompt({ mode, gameState, talents, inventory, intraDayContext, dailyTheme }),
         },
         ...historyMessages,
         { role: 'user', content: userPayload },
@@ -419,17 +435,21 @@ export async function requestDeepSeekResolution({
   history,
   talents = [],
   inventory = [],
+  dailyTheme = null,
 }) {
   const historyMessages = history.slice(-8).map((item) => ({
     role: item.role === 'player' ? 'user' : 'assistant',
     content: messageToModelText(item),
   }))
 
+  const dailyThemeRules = buildDailyThemePrompt(dailyTheme)
+
   const systemPrompt = `你是《打工人模拟器》的判卷裁判，只负责结算当前这一条选择造成的后果。
 请结合玩家属性、帮派、天赋和背包道具，判定本回合的即时收益或代价。
 不要生成下一题，不要追加 options，不要提供手机消息，不要要求输入金额。
 
-${buildPlayerContext({ gameState, talents, inventory })}
+${dailyThemeRules ? `${dailyThemeRules}
+` : ''}${buildPlayerContext({ gameState, talents, inventory })}
 
 ${RESOLUTION_OUTPUT_SCHEMA_RULES}`
 

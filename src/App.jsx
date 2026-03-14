@@ -1402,6 +1402,7 @@ function App() {
         sellerOffers: overrides.sellerOffers ?? sellerOffers,
         investmentRequest: overrides.investmentRequest ?? investmentRequest,
         investmentAmount: overrides.investmentAmount ?? investmentAmount,
+        currentDailyTheme: overrides.currentDailyTheme ?? currentDailyThemeRef.current,
         activeEvent: overrides.activeEvent ?? activeEventRef.current,
         activeFactionInvite: overrides.activeFactionInvite ?? activeFactionInviteRef.current,
         currentOptions: overrides.currentOptions ?? currentOptions,
@@ -1425,6 +1426,7 @@ function App() {
       hasStarted,
       investmentAmount,
       investmentRequest,
+      currentDailyTheme,
       sellerOffers,
       talents,
     ],
@@ -1451,6 +1453,7 @@ function App() {
     ({ clearSave = false } = {}) => {
       const { nextTalentSelection, previewState, previewTalents } = buildFreshRunPreview()
       const nextMaxEvents = rollMaxEventsToday()
+      const nextDailyTheme = pickRandomDailyTheme(currentDailyThemeRef.current?.name || '')
 
       if (clearSave) {
         clearSavedGame()
@@ -1475,6 +1478,8 @@ function App() {
       setInvestmentRequest(null)
       commitActiveEvent(null)
       setInvestmentAmount(0)
+      setCurrentDailyTheme(nextDailyTheme)
+      currentDailyThemeRef.current = nextDailyTheme
       setLoadingText('')
       setCurrentOptions([])
       setActiveEvent(null)
@@ -1570,6 +1575,7 @@ function App() {
       const restoredInvestmentAmount = Math.max(0, Number(savedGame.investmentAmount) || 0)
       const restoredHoldings = savedGame.holdings || initialHoldings
       const restoredMarketPrices = savedGame.marketPrices || initialMarketPrices
+      const restoredDailyTheme = savedGame.currentDailyTheme || pickRandomDailyTheme()
 
       if (nextEventTimerRef.current) {
         window.clearTimeout(nextEventTimerRef.current)
@@ -1588,6 +1594,8 @@ function App() {
       pendingInvestmentsRef.current = restoredPendingInvestments
       setInvestmentRequest(savedGame.investmentRequest || null)
       setInvestmentAmount(restoredInvestmentAmount)
+      setCurrentDailyTheme(restoredDailyTheme)
+      currentDailyThemeRef.current = restoredDailyTheme
       setLoadingText('')
       setCurrentOptions(restoredCurrentOptions)
       setActiveEvent(restoredActiveEvent)
@@ -1660,6 +1668,7 @@ function App() {
     activeFactionInvite,
     currentOptions,
     activeEvent,
+    currentDailyTheme,
     endDayButtonText,
     endgameSummary,
     eventsToday,
@@ -2188,6 +2197,7 @@ function App() {
           history: messagesRef.current,
           talents,
           inventory: inventoryRef.current,
+          dailyTheme: currentDailyThemeRef.current,
           mode,
           intraDayContext: {
             eventIndex,
@@ -2320,6 +2330,7 @@ function App() {
           history: historyForTurn,
           talents,
           inventory: inventoryRef.current,
+          dailyTheme: currentDailyThemeRef.current,
         })
 
         applyResolutionResult(resolutionResult)
@@ -2401,6 +2412,7 @@ function App() {
           history: historyForTurn,
           talents,
           inventory: inventoryRef.current,
+          dailyTheme: currentDailyThemeRef.current,
           mode: modeOverride,
           intraDayContext: {
             eventIndex,
@@ -2605,8 +2617,11 @@ function App() {
         baseHealthState: preHealthState,
         skipAfflictionCheck: wasHospitalizing,
       })
+      const nextDailyTheme = pickRandomDailyTheme(currentDailyThemeRef.current?.name || '')
 
       dayMessageCandidatesRef.current = []
+      setCurrentDailyTheme(nextDailyTheme)
+      currentDailyThemeRef.current = nextDailyTheme
       setEventsToday(0)
       eventsTodayRef.current = 0
       const nextMaxEvents = rollMaxEventsToday()
@@ -3363,6 +3378,7 @@ function App() {
               isGameOver={isGameOver}
               isVictory={isVictory}
               day={gameState.day}
+              currentDailyTheme={currentDailyTheme}
               eventsToday={eventsToday}
               maxEventsToday={maxEventsToday}
               isAwaitingEndDay={isAwaitingEndDay}
@@ -3476,6 +3492,7 @@ function App() {
               isGameOver={isGameOver}
               isVictory={isVictory}
               day={gameState.day}
+              currentDailyTheme={currentDailyTheme}
               eventsToday={eventsToday}
               maxEventsToday={maxEventsToday}
               isAwaitingEndDay={isAwaitingEndDay}
