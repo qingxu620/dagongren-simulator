@@ -35,6 +35,28 @@ const OUTPUT_SCHEMA_RULES = `
 7. 若本回合是“报价/推销/收费”阶段而玩家尚未明确支付，则 statChanges.money 必须为 0。
 `
 
+const RESOLUTION_OUTPUT_SCHEMA_RULES = `
+输出格式（必须严格遵守）：
+{
+  "narrative": "你把锅优雅地甩了回去，但老板的眼神更阴了。",
+  "statChanges": {
+    "money": 0,
+    "energy": -5,
+    "sanity": -3,
+    "bossFavor": -8,
+    "colleagueFavor": 2,
+    "clientFavor": 0
+  }
+}
+
+硬性要求：
+1. 只能输出 JSON 对象，不能输出 Markdown、代码块、解释文本。
+2. 只允许出现 narrative 和 statChanges 两个字段。
+3. narrative 必须控制在 50 字以内，只描述本回合后果。
+4. statChanges 六个字段都必须是整数。
+5. 严禁生成新事件、options、messages、requireInvestmentInput。
+`
+
 const DAILY_SYSTEM_RULES = `
 你是《打工人模拟器》的 DM（剧情主持人），游戏风格参考《王权 Reigns》。
 你的任务：根据玩家选择推进 1 回合剧情，并返回严格 JSON。
@@ -189,6 +211,18 @@ function normalizeStatChanges(rawStatChanges) {
     bossFavor: clamp(toInteger(rawStatChanges?.bossFavor), -25, 25),
     colleagueFavor: clamp(toInteger(rawStatChanges?.colleagueFavor), -25, 25),
     clientFavor: clamp(toInteger(rawStatChanges?.clientFavor), -25, 25),
+  }
+}
+
+function normalizeResolutionResult(rawResult) {
+  const narrative =
+    typeof rawResult?.narrative === 'string' && rawResult.narrative.trim()
+      ? rawResult.narrative.trim()
+      : '【系统】这次选择的后果暂时模糊，但职场不会因此放过你。'
+
+  return {
+    narrative,
+    statChanges: normalizeStatChanges(rawResult?.statChanges),
   }
 }
 
@@ -375,6 +409,77 @@ export async function requestDeepSeekTurn({
   }
 
   return normalizeTurnResult(parsed)
+}
+
+export async function requestDeepSeekResolution({
+  apiKey,
+  eventNarrative,
+  selectedOption,
+  gameState,
+  history,
+  talents = [],
+  inventory = [],
+}) {
+  const historyMessages = history.slice(-8).map((item) => ({
+    role: item.role === 'player' ? 'user' : 'assistant',
+    content: messageToModelText(item),
+  }))
+
+  const systemPrompt = `你是《打工人模拟器》的判卷裁判，只负责结算当前这一条选择造成的后果。
+请结合玩家属性、帮派、天赋和背包道具，判定本回合的即时收益或代价。
+不要生成下一题，不要追加 options，不要提供手机消息，不要要求输入金额。
+
+${buildPlayerContext({ gameState, talents, inventory })}
+
+${RESOLUTION_OUTPUT_SCHEMA_RULES}`
+
+  const userPrompt = `【判卷任务】
+事件：${eventNarrative}
+玩家选择：${selectedOption}
+请只返回 50 字以内的 narrative 和 statChanges，不准生成新事件和选项。`
+
+  const response = await fetch(API_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        ...historyMessages,
+        {
+          role: 'user',
+          content: userPrompt,
+        },
+      ],
+    }),
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data?.error?.message || 'DeepSeek 判卷失败。')
+  }
+
+  const content = data?.choices?.[0]?.message?.content
+  if (!content) {
+    throw new Error('DeepSeek 判卷返回为空。')
+  }
+
+  let parsed
+  try {
+    parsed = JSON.parse(content)
+  } catch {
+    throw new Error('AI 判卷结果不是合法 JSON。')
+  }
+
+  return normalizeResolutionResult(parsed)
 }
 
 export function applyTurnChanges(gameState, turnResult) {

@@ -56,7 +56,7 @@ function ChatPanel({
   isAwaitingEndDay = false,
   onOpenPhone,
   unreadPhoneCount = 0,
-  loadingHint = '命运齿轮转动中...',
+  loadingText = '命运的齿轮卡住了...',
 }) {
   const scrollContainerRef = useRef(null)
   const safeMaxEvents = Math.max(1, maxEventsToday)
@@ -195,7 +195,7 @@ function ChatPanel({
           <article className="flex justify-start">
             <div className="max-w-xl rounded-2xl rounded-bl-sm border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-slate-700 shadow-sm">
               <p className="mb-1 text-xs text-slate-500">系统</p>
-              <p className="mb-2">{loadingHint}</p>
+              <p className="mb-2 animate-pulse">💬 {loadingText}</p>
               <div className="flex items-center gap-1">
                 <span className="h-2 w-2 animate-bounce rounded-full bg-sky-400" />
                 <span

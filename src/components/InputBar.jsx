@@ -129,6 +129,19 @@ function InputBar({
             {endDayButtonText}
           </button>
         </div>
+      ) : isLoading ? (
+        <div className="grid gap-2 sm:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <button
+              key={`loading-${index}`}
+              type="button"
+              disabled
+              className="rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-left text-[13px] font-medium leading-tight text-slate-400 shadow-sm sm:min-h-12 sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm sm:leading-normal"
+            >
+              {`选项${String.fromCharCode(65 + index)}：处理中...`}
+            </button>
+          ))}
+        </div>
       ) : (
         <div className="grid gap-2 sm:grid-cols-3">
           {options.map((item, index) => (
@@ -145,7 +158,7 @@ function InputBar({
         </div>
       )}
 
-      {isLoading ? <p className="mt-2 text-xs text-blue-600 sm:text-sm">AI 正在生成下一轮剧情和选项...</p> : null}
+      {isLoading ? <p className="mt-2 text-xs text-blue-600 sm:text-sm">AI 正在处理中...</p> : null}
       {helperText ? <p className="mt-2 text-xs text-slate-400">{helperText}</p> : null}
     </footer>
   )

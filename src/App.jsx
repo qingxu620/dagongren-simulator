@@ -17,7 +17,7 @@ import SidebarStats from './components/SidebarStats'
 import SoulShopModal from './components/SoulShopModal'
 import ToastStack from './components/ToastStack'
 import TutorialModal from './components/TutorialModal'
-import { getGameOverReason, requestDeepSeekTurn } from './lib/deepseek'
+import { getGameOverReason, requestDeepSeekResolution, requestDeepSeekTurn } from './lib/deepseek'
 
 const API_KEY_STORAGE = 'dagongren.deepseek.api_key'
 const GAME_SAVE_STORAGE = 'dagongren_save'
@@ -49,12 +49,123 @@ const HOSPITAL_SKIP_TURNS = 3
 const PHONE_MESSAGE_TRIGGER_RATE = 0.18
 const SALARY_CLAWBACK_TRIGGER_RATE = 0.2
 const SALARY_CLAWBACK_REASONS = ['团建费', '呼吸税', '左脚先踏进公司违规罚款', '工位空气使用费']
-const LOADING_HINTS = ['[老板正在输入中...]', '[命运齿轮转动中...]']
+const LOADING_MESSAGES = [
+  '老板正在偷偷查监控...',
+  'HR 正在起草解雇通知...',
+  '命运的齿轮卡住了...',
+  '正在黑入同事的微信聊天记录...',
+  '资本家的算盘正在疯狂拨动...',
+  '正在计算你的剩余利用价值...',
+]
 const DEFAULT_END_DAY_BUTTON_TEXT = '🌙 终于熬到头了，打卡下班！'
 const DEFAULT_VICTORY_TEXT = '【恭喜你，熬过了30天，成功拿着N+1赔偿金光荣退休！】'
 const MONEY_SHAKE_THRESHOLD = 500
 const STAT_SHAKE_THRESHOLD = 20
 const SHAKE_DURATION_MS = 400
+const AI_NEXT_EVENT_RATE = 60
+const NEXT_EVENT_DELAY_MS = 2000
+
+const LOCAL_EVENTS = [
+  {
+    narrative: '老板突然把你叫进办公室，让你把公司刚研发的 AI 核心代码免费发给他的亲戚。',
+    options: ['严词拒绝，顺便普法', '偷偷埋个定时崩溃 Bug 再发', '立刻照做并补一个跪舔表情包'],
+  },
+  {
+    narrative: '同事在工位上直播带货，想借你的电脑演示“年薪翻倍办公神机”。',
+    options: ['借他三分钟，先看热闹', '拔掉网线装作电脑死机', '主动入镜帮他站台'],
+  },
+  {
+    narrative: '甲方深夜发来 48 条语音，只总结成一句话：“感觉不对，再改改。”',
+    options: ['要求对方写清需求文档', '把语音全转成 PPT 回怼', '秒回收到并继续燃烧自己'],
+  },
+  {
+    narrative: '部门群里突然开始接龙晒步数，老板暗示步数最低的人今晚加班。',
+    options: ['立刻疯狂抖手机刷步数', '发一张昨天的截图糊弄过去', '坦然垫底并申请加班餐升级'],
+  },
+  {
+    narrative: '财务小姐姐悄悄问你，要不要一起报销一张根本不存在的打车票。',
+    options: ['婉拒并假装没听见', '先问比例怎么分', '建议做成企业团建成本'],
+  },
+  {
+    narrative: '前同事神秘兮兮发来消息，说有个“元宇宙政务 SaaS”项目正在招天选打工人。',
+    options: ['问清商业模式再说', '立刻夸他 vision 很大', '把消息转给老板换好感'],
+  },
+  {
+    narrative: '实习生把线上库删了，却先在群里@你说“是哥教我的热更新”。',
+    options: ['当场澄清并自证清白', '先帮他救火，事后再算账', '顺势认领功劳赌一把'],
+  },
+  {
+    narrative: '行政通知大家参加“自愿”企业文化大合唱，C 位默认留给最会来事的人。',
+    options: ['装病申请远程办公', '拉着同事一起跑调', '主动冲到最前面表忠心'],
+  },
+  {
+    narrative: '老板要求你周末去机场接客户，但报销标准只有一瓶矿泉水。',
+    options: ['据理力争补贴和调休', '先答应再想办法蹭顺风车', '感恩戴德地说这是成长'],
+  },
+  {
+    narrative: '工位下忽然出现一个匿名纸箱，贴着字条：“里面是改变命运的机会，别告诉 HR。”',
+    options: ['打开看看再说', '直接交给保安', '抱回家当年会盲盒'],
+  },
+  {
+    narrative: '项目群里有人匿名发起投票，主题是“谁最适合为全组背锅”。你的票数正在飙升。',
+    options: ['立刻追查投票源头', '先给自己投一票显得大度', '把锅甩向隔壁组'],
+  },
+  {
+    narrative: '厕所门口出现一位自称“组织部观察员”的神秘人，问你愿不愿意加入地下工位互助会。',
+    options: ['先问加入后包不包午饭', '委婉拒绝并火速撤离', '立刻宣誓加入看看'],
+  },
+]
+
+const DAILY_THEMES_POOL = [
+  {
+    name: '降本增效大裁员',
+    description: '公司正在秘密拟定裁员名单，全员风声鹤唳。老板会把每个小失误都放大，但表现欲也更容易换来表扬。',
+  },
+  {
+    name: '疯狂星期四',
+    description: '全公司都在摸鱼等下班，空气里飘着炸鸡味。人际关系更容易升温，但所有人的专注力都很可疑。',
+  },
+  {
+    name: '神秘的甲方视察',
+    description: '金主爸爸今天微服私访，公司到处都是形式主义。任何和客户相关的细节都可能突然被放到聚光灯下。',
+  },
+  {
+    name: '年终述职地狱',
+    description: '大家都在疯狂包装 PPT 和功劳簿。今天职场充满抢功、甩锅和临时表演型加班。',
+  },
+  {
+    name: '老板玄学管理日',
+    description: '老板今天完全靠黄历和心情做决策，逻辑不再重要。离谱的举动反而可能误打误撞获得认可。',
+  },
+  {
+    name: '审计风暴前夜',
+    description: '财务、流程、报销和聊天记录都可能被翻出来。任何灰色操作都带着浓烈的危险气息。',
+  },
+  {
+    name: '全员鸡血团建周',
+    description: '企业文化像洪水一样扑来，所有人被迫积极。会来事的人如鱼得水，不合群的人容易被盯上。',
+  },
+  {
+    name: '办公室谣言季',
+    description: '茶水间和厕所门口的消息满天飞，真真假假难辨。人际关系和消息判断会比平时更关键。',
+  },
+  {
+    name: '系统崩溃救火日',
+    description: '线上系统摇摇欲坠，所有人都处于随时背锅的边缘。今天的每个决定都带着救火和甩锅的火药味。',
+  },
+  {
+    name: '神秘资本空降',
+    description: '听说有新投资人要来，公司人人都在装精英。夸张的表演、假消息和画大饼会明显增多。',
+  },
+  {
+    name: '工位政治高压锅',
+    description: '部门内部站队愈发明显，所有人都在观察谁跟谁是一伙的。帮派、同事关系和暗线接头更容易冒头。',
+  },
+  {
+    name: '绩效冲刺末班车',
+    description: '离绩效评定只剩最后一点时间，所有人都在抢最后的露脸机会。短期收益和长期后果都更极端。',
+  },
+]
 
 const defaultSoulUpgrades = {
   starterCashBoost: false,
@@ -499,6 +610,44 @@ function shuffleArray(array) {
   return result
 }
 
+function pickRandomLocalEvent() {
+  const picked = LOCAL_EVENTS[randomInt(0, LOCAL_EVENTS.length - 1)] || LOCAL_EVENTS[0]
+  return {
+    narrative: picked.narrative,
+    options: Array.isArray(picked.options) ? picked.options.slice(0, 3) : [],
+  }
+}
+
+function pickRandomDailyTheme(excludedName = '') {
+  const pool =
+    DAILY_THEMES_POOL.length > 1 && excludedName
+      ? DAILY_THEMES_POOL.filter((item) => item.name !== excludedName)
+      : DAILY_THEMES_POOL
+
+  return pool[randomInt(0, pool.length - 1)] || DAILY_THEMES_POOL[0] || null
+}
+
+function createActiveEventSnapshot({
+  narrative,
+  options = [],
+  source = 'local',
+  mode = 'daily_workplace',
+  specialEventType = 'normal',
+  requireInvestmentInput = false,
+  eventIndex = 1,
+}) {
+  return {
+    id: `event-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    narrative,
+    options,
+    source,
+    mode,
+    specialEventType,
+    requireInvestmentInput: Boolean(requireInvestmentInput),
+    eventIndex,
+  }
+}
+
 function rollSalaryWithCapitalistClawback(baseSalary) {
   const salary = Math.max(0, Number(baseSalary) || 0)
   if (Math.random() >= SALARY_CLAWBACK_TRIGGER_RATE) {
@@ -891,6 +1040,18 @@ function settlePendingInvestments(pendingInvestments, currentDay) {
   }
 }
 
+function isRunTerminal(nextState, nextHealthState, holdings, marketPrices) {
+  const totalAssetValue = nextState.money + getPortfolioMarketValue(holdings, marketPrices)
+  return (
+    (nextHealthState.sick && nextHealthState.depressed && nextHealthState.dualDebuffDays > 3) ||
+    nextState.money < 0 ||
+    totalAssetValue <= 0 ||
+    Boolean(getGameOverReason(nextState)) ||
+    totalAssetValue >= RICH_WIN_TARGET ||
+    nextState.day >= WIN_DAY
+  )
+}
+
 function buildIntuitionAnalysis(isTrue, wisdom) {
   const roll = randomInt(1, 100)
   const passedCheck = roll < clampStat(wisdom)
@@ -946,9 +1107,11 @@ function App() {
   const [pendingInvestments, setPendingInvestments] = useState([])
   const [investmentRequest, setInvestmentRequest] = useState(null)
   const [investmentAmount, setInvestmentAmount] = useState(0)
-  const [loadingHint, setLoadingHint] = useState(LOADING_HINTS[0])
+  const [currentDailyTheme, setCurrentDailyTheme] = useState(() => pickRandomDailyTheme())
+  const [loadingText, setLoadingText] = useState('')
   const [isTutorialOpen, setIsTutorialOpen] = useState(true)
   const [currentOptions, setCurrentOptions] = useState([])
+  const [activeEvent, setActiveEvent] = useState(null)
   const [activeFactionInvite, setActiveFactionInvite] = useState(null)
   const [eventsToday, setEventsToday] = useState(0)
   const [maxEventsToday, setMaxEventsToday] = useState(() => rollMaxEventsToday())
@@ -996,6 +1159,8 @@ function App() {
   const holdingsRef = useRef(initialHoldings)
   const inventoryRef = useRef([])
   const dayMessageCandidatesRef = useRef([])
+  const currentDailyThemeRef = useRef(currentDailyTheme)
+  const activeEventRef = useRef(null)
   const activeFactionInviteRef = useRef(null)
   const eventsTodayRef = useRef(0)
   const maxEventsTodayRef = useRef(maxEventsToday)
@@ -1004,6 +1169,7 @@ function App() {
   const activeTabRef = useRef(1)
   const sideHustlesTodayRef = useRef(0)
   const shakeTimerRef = useRef(null)
+  const nextEventTimerRef = useRef(null)
   const hasSettledRunRef = useRef(false)
   const scamRuinRef = useRef(false)
   const soulPointsRef = useRef(soulPoints)
@@ -1041,6 +1207,14 @@ function App() {
   useEffect(() => {
     inventoryRef.current = inventory
   }, [inventory])
+
+  useEffect(() => {
+    currentDailyThemeRef.current = currentDailyTheme
+  }, [currentDailyTheme])
+
+  useEffect(() => {
+    activeEventRef.current = activeEvent
+  }, [activeEvent])
 
   useEffect(() => {
     activeFactionInviteRef.current = activeFactionInvite
@@ -1081,8 +1255,30 @@ function App() {
       if (shakeTimerRef.current) {
         window.clearTimeout(shakeTimerRef.current)
       }
+      if (nextEventTimerRef.current) {
+        window.clearTimeout(nextEventTimerRef.current)
+      }
     }
   }, [])
+
+  useEffect(() => {
+    if (!isLoading) {
+      setLoadingText('')
+      return undefined
+    }
+
+    const pickRandomLoadingMessage = () =>
+      LOADING_MESSAGES[randomInt(0, LOADING_MESSAGES.length - 1)] || LOADING_MESSAGES[0]
+
+    setLoadingText(pickRandomLoadingMessage())
+    const intervalId = window.setInterval(() => {
+      setLoadingText(pickRandomLoadingMessage())
+    }, 1000)
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [isLoading])
 
   useEffect(() => {
     const storedKey = window.localStorage.getItem(API_KEY_STORAGE) || ''
@@ -1206,6 +1402,7 @@ function App() {
         sellerOffers: overrides.sellerOffers ?? sellerOffers,
         investmentRequest: overrides.investmentRequest ?? investmentRequest,
         investmentAmount: overrides.investmentAmount ?? investmentAmount,
+        activeEvent: overrides.activeEvent ?? activeEventRef.current,
         activeFactionInvite: overrides.activeFactionInvite ?? activeFactionInviteRef.current,
         currentOptions: overrides.currentOptions ?? currentOptions,
         dayMessageCandidates: overrides.dayMessageCandidates ?? dayMessageCandidatesRef.current,
@@ -1215,7 +1412,6 @@ function App() {
         sideHustlesToday: overrides.sideHustlesToday ?? sideHustlesTodayRef.current,
         isAwaitingEndDay: overrides.isAwaitingEndDay ?? isAwaitingEndDayRef.current,
         endDayButtonText: overrides.endDayButtonText ?? endDayButtonText,
-        loadingHint: overrides.loadingHint ?? loadingHint,
         scamRuin: overrides.scamRuin ?? scamRuinRef.current,
         isGameOver: false,
         isVictory: false,
@@ -1229,7 +1425,6 @@ function App() {
       hasStarted,
       investmentAmount,
       investmentRequest,
-      loadingHint,
       sellerOffers,
       talents,
     ],
@@ -1261,6 +1456,11 @@ function App() {
         clearSavedGame()
       }
 
+      if (nextEventTimerRef.current) {
+        window.clearTimeout(nextEventTimerRef.current)
+        nextEventTimerRef.current = null
+      }
+
       setTalentSelection(nextTalentSelection)
       setGameState(previewState)
       gameStateRef.current = previewState
@@ -1273,9 +1473,12 @@ function App() {
       setPendingInvestments([])
       pendingInvestmentsRef.current = []
       setInvestmentRequest(null)
+      commitActiveEvent(null)
       setInvestmentAmount(0)
-      setLoadingHint(LOADING_HINTS[0])
+      setLoadingText('')
       setCurrentOptions([])
+      setActiveEvent(null)
+      activeEventRef.current = null
       setActiveFactionInvite(null)
       activeFactionInviteRef.current = null
       setEventsToday(0)
@@ -1345,13 +1548,33 @@ function App() {
         ? savedGame.talents || savedGame.currentTalents
         : []
       const restoredCurrentOptions = Array.isArray(savedGame.currentOptions) ? savedGame.currentOptions : []
-      const restoredDayMessages = Array.isArray(savedGame.dayMessageCandidates) ? savedGame.dayMessageCandidates : []
       const restoredEventsToday = Math.max(0, Number(savedGame.eventsToday) || 0)
+      const fallbackNarrative =
+        [...restoredMessages].reverse().find((item) => item?.role === 'system' && typeof item?.content === 'string')
+          ?.content || '【系统】你上一次的打工回合还没做完。'
+      const restoredActiveEvent =
+        savedGame.activeEvent ||
+        (restoredCurrentOptions.length
+          ? createActiveEventSnapshot({
+              narrative: fallbackNarrative,
+              options: restoredCurrentOptions,
+              source: 'local',
+              mode: 'daily_workplace',
+              specialEventType: 'normal',
+              eventIndex: restoredEventsToday + 1,
+            })
+          : null)
+      const restoredDayMessages = Array.isArray(savedGame.dayMessageCandidates) ? savedGame.dayMessageCandidates : []
       const restoredMaxEventsToday = Math.max(1, Number(savedGame.maxEventsToday) || rollMaxEventsToday())
       const restoredSideHustlesToday = Math.max(0, Number(savedGame.sideHustlesToday) || 0)
       const restoredInvestmentAmount = Math.max(0, Number(savedGame.investmentAmount) || 0)
       const restoredHoldings = savedGame.holdings || initialHoldings
       const restoredMarketPrices = savedGame.marketPrices || initialMarketPrices
+
+      if (nextEventTimerRef.current) {
+        window.clearTimeout(nextEventTimerRef.current)
+        nextEventTimerRef.current = null
+      }
 
       setGameState(savedGame.gameState)
       gameStateRef.current = savedGame.gameState
@@ -1365,8 +1588,10 @@ function App() {
       pendingInvestmentsRef.current = restoredPendingInvestments
       setInvestmentRequest(savedGame.investmentRequest || null)
       setInvestmentAmount(restoredInvestmentAmount)
-      setLoadingHint(savedGame.loadingHint || LOADING_HINTS[0])
+      setLoadingText('')
       setCurrentOptions(restoredCurrentOptions)
+      setActiveEvent(restoredActiveEvent)
+      activeEventRef.current = restoredActiveEvent
       setActiveFactionInvite(savedGame.activeFactionInvite || null)
       activeFactionInviteRef.current = savedGame.activeFactionInvite || null
       setEventsToday(restoredEventsToday)
@@ -1434,6 +1659,7 @@ function App() {
   }, [
     activeFactionInvite,
     currentOptions,
+    activeEvent,
     endDayButtonText,
     endgameSummary,
     eventsToday,
@@ -1451,7 +1677,6 @@ function App() {
     isResumePromptOpen,
     isTutorialOpen,
     isVictory,
-    loadingHint,
     marketPrices,
     messages,
     pendingInvestments,
@@ -1469,6 +1694,25 @@ function App() {
     window.setTimeout(() => {
       setToasts((prev) => prev.filter((item) => item.id !== toastId))
     }, 3000)
+  }, [])
+
+  const clearPendingNextEvent = useCallback(() => {
+    if (nextEventTimerRef.current) {
+      window.clearTimeout(nextEventTimerRef.current)
+      nextEventTimerRef.current = null
+    }
+  }, [])
+
+  const clearTransientErrors = useCallback(() => {
+    setShopErrorMessage('')
+    setMarketErrorMessage('')
+    setSellerErrorMessage('')
+    setBackpackErrorMessage('')
+  }, [])
+
+  const commitActiveEvent = useCallback((nextEvent) => {
+    setActiveEvent(nextEvent)
+    activeEventRef.current = nextEvent
   }, [])
 
   const handleToggleTalent = useCallback(
@@ -1536,6 +1780,7 @@ function App() {
         return
       }
       hasSettledRunRef.current = true
+      clearPendingNextEvent()
       clearSavedGame()
 
       const survivedDays = Math.max(1, nextState.day)
@@ -1567,7 +1812,7 @@ function App() {
         unlockedTitles: newlyUnlockedIds.map((id) => getAchievementTitleById(id)),
       })
     },
-    [clearSavedGame, pushToast],
+    [clearPendingNextEvent, clearSavedGame, pushToast],
   )
 
   const appendPhoneMessages = useCallback(
@@ -1592,6 +1837,7 @@ function App() {
   const resolveTerminalState = useCallback(
     (nextState, nextHealthState = healthStateRef.current) => {
       const closeRunPanels = () => {
+        clearPendingNextEvent()
         setIsShopOpen(false)
         setIsMarketOpen(false)
         setIsSellerOpen(false)
@@ -1601,6 +1847,7 @@ function App() {
         setIsAchievementsOpen(false)
         setInvestmentRequest(null)
         setCurrentOptions([])
+        commitActiveEvent(null)
       }
 
       if (nextHealthState.sick && nextHealthState.depressed && nextHealthState.dualDebuffDays > 3) {
@@ -1692,7 +1939,7 @@ function App() {
         })
       }
     },
-    [appendSystemMessage, finalizeRun],
+    [appendSystemMessage, clearPendingNextEvent, commitActiveEvent, finalizeRun],
   )
 
   const applyDailyMaintenance = useCallback(
@@ -1797,7 +2044,9 @@ function App() {
       window.localStorage.removeItem(API_KEY_STORAGE)
       setApiKey('')
       setHasStarted(false)
+      clearPendingNextEvent()
       setCurrentOptions([])
+      commitActiveEvent(null)
       setIsAwaitingEndDay(false)
       setEndDayButtonText('🌙 终于熬到头了，打卡下班！')
       setInvestmentRequest(null)
@@ -1809,10 +2058,299 @@ function App() {
     window.localStorage.setItem(API_KEY_STORAGE, nextKey)
     setApiKey(nextKey)
     setHasStarted(false)
+    clearPendingNextEvent()
+    commitActiveEvent(null)
     dayMessageCandidatesRef.current = []
     setApiKeyStatus('API Key 已保存到 localStorage。')
     scrollToMobileTab(1)
   }
+
+  const presentGeneratedEvent = useCallback(
+    ({
+      narrative,
+      options,
+      source = 'local',
+      mode = 'daily_workplace',
+      specialEventType = 'normal',
+      requireInvestmentInput = false,
+      eventIndex = 1,
+    }) => {
+      const shuffledOptions = shuffleArray(options)
+      const nextEvent = createActiveEventSnapshot({
+        narrative,
+        options: shuffledOptions,
+        source,
+        mode,
+        specialEventType,
+        requireInvestmentInput,
+        eventIndex,
+      })
+
+      commitActiveEvent(nextEvent)
+      appendSystemMessage(narrative)
+
+      if (requireInvestmentInput || mode === 'investment_pitch') {
+        const maxAmount = Math.max(0, Math.floor(gameStateRef.current.money))
+        setInvestmentRequest({
+          maxAmount,
+          suggestedOptions: shuffledOptions,
+          endDayAfterResolve: false,
+        })
+        setInvestmentAmount(Math.min(maxAmount, 100))
+        setCurrentOptions([])
+        appendSystemMessage('【系统】对方要求你立刻输入投资金额，请谨慎决策。')
+        return nextEvent
+      }
+
+      setInvestmentRequest(null)
+      setCurrentOptions(shuffledOptions)
+      return nextEvent
+    },
+    [appendSystemMessage, commitActiveEvent],
+  )
+
+  const generateNextEvent = useCallback(
+    async (specialEventType = 'normal', options = {}) => {
+      const { bypassLock = false, eventIndexOverride = null, maxEventsOverride = null } = options
+      if (!hasApiKey || (!bypassLock && isInteractionLocked)) {
+        return
+      }
+
+      clearPendingNextEvent()
+      clearTransientErrors()
+      setInvestmentRequest(null)
+      setCurrentOptions([])
+      setIsAwaitingEndDay(false)
+      isAwaitingEndDayRef.current = false
+      setEndDayButtonText(DEFAULT_END_DAY_BUTTON_TEXT)
+      setActiveFactionInvite(null)
+      activeFactionInviteRef.current = null
+
+      const eventIndex = Math.max(1, eventIndexOverride ?? eventsTodayRef.current + 1)
+      const maxEventsForPrompt = Math.max(1, maxEventsOverride ?? maxEventsTodayRef.current)
+
+      if (specialEventType === 'seller') {
+        const offers = generateSellerOffers()
+        setSellerOffers(offers)
+        setIsSellerOpen(true)
+        presentGeneratedEvent({
+          narrative: '【系统】你刚到工位，神秘推销商就从打印机后面闪现出来，堵住了你的去路。',
+          options: SELLER_FOLLOWUP_OPTIONS,
+          source: 'local',
+          mode: 'seller',
+          specialEventType,
+          eventIndex,
+        })
+        return
+      }
+
+      if (specialEventType === 'faction_invite') {
+        const inviteEvent = createFactionInviteEvent(gameStateRef.current.faction)
+        setActiveFactionInvite(inviteEvent)
+        activeFactionInviteRef.current = inviteEvent
+        presentGeneratedEvent({
+          narrative: inviteEvent.narrative,
+          options: inviteEvent.options,
+          source: 'local',
+          mode: 'faction_invite',
+          specialEventType,
+          eventIndex,
+        })
+        return
+      }
+
+      if (specialEventType === 'normal' && randomInt(1, 100) > AI_NEXT_EVENT_RATE) {
+        const localEvent = pickRandomLocalEvent()
+        presentGeneratedEvent({
+          ...localEvent,
+          source: 'local',
+          mode: 'daily_workplace',
+          specialEventType,
+          eventIndex,
+        })
+        return
+      }
+
+      const mode =
+        specialEventType === 'fortune_teller'
+          ? 'fortune_teller'
+          : specialEventType === 'investment_pitch'
+            ? 'investment_pitch'
+            : 'daily_workplace'
+
+      setIsLoading(true)
+
+      try {
+        const turnResult = await requestDeepSeekTurn({
+          apiKey,
+          playerInput: GAME_START_COMMAND,
+          gameState: gameStateRef.current,
+          history: messagesRef.current,
+          talents,
+          inventory: inventoryRef.current,
+          mode,
+          intraDayContext: {
+            eventIndex,
+            maxEventsToday: maxEventsForPrompt,
+            period: getIntraDayPeriod(eventIndex, maxEventsForPrompt),
+          },
+        })
+
+        if (turnResult.messages.length) {
+          dayMessageCandidatesRef.current = [
+            ...dayMessageCandidatesRef.current,
+            ...turnResult.messages,
+          ].slice(-8)
+        }
+
+        presentGeneratedEvent({
+          narrative: turnResult.narrative,
+          options: turnResult.options,
+          source: 'ai',
+          mode,
+          specialEventType,
+          requireInvestmentInput: turnResult.requireInvestmentInput || mode === 'investment_pitch',
+          eventIndex,
+        })
+      } catch (error) {
+        appendSystemMessage(`【系统】${error.message || 'AI 出题失败，已切换到本地事件池。'}`)
+        const localEvent = pickRandomLocalEvent()
+        presentGeneratedEvent({
+          ...localEvent,
+          source: 'local',
+          mode: 'daily_workplace',
+          specialEventType: 'normal',
+          eventIndex,
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [
+      apiKey,
+      appendSystemMessage,
+      clearPendingNextEvent,
+      clearTransientErrors,
+      hasApiKey,
+      isInteractionLocked,
+      presentGeneratedEvent,
+      talents,
+    ],
+  )
+
+  const scheduleNextWorkEvent = useCallback(() => {
+    clearPendingNextEvent()
+    nextEventTimerRef.current = window.setTimeout(() => {
+      nextEventTimerRef.current = null
+      void generateNextEvent('normal', { bypassLock: true })
+    }, NEXT_EVENT_DELAY_MS)
+  }, [clearPendingNextEvent, generateNextEvent])
+
+  const applyResolutionResult = useCallback(
+    (resolutionResult) => {
+      const nextTurnState = applyEventStatChanges(gameStateRef.current, resolutionResult.statChanges)
+      setGameState(nextTurnState)
+      gameStateRef.current = nextTurnState
+
+      appendSystemMessage(
+        resolutionResult.narrative,
+        createChangePayload({
+          moneyChange: resolutionResult.statChanges.money,
+          energyChange: resolutionResult.statChanges.energy,
+          sanityChange: resolutionResult.statChanges.sanity,
+          bossFavorChange: resolutionResult.statChanges.bossFavor,
+          colleagueFavorChange: resolutionResult.statChanges.colleagueFavor,
+          clientFavorChange: resolutionResult.statChanges.clientFavor,
+        }),
+      )
+
+      commitActiveEvent(null)
+      setInvestmentRequest(null)
+      setCurrentOptions([])
+
+      const nextEventsToday = eventsTodayRef.current + 1
+      setEventsToday(nextEventsToday)
+      eventsTodayRef.current = nextEventsToday
+
+      resolveTerminalState(nextTurnState, healthStateRef.current)
+
+      if (isRunTerminal(nextTurnState, healthStateRef.current, holdingsRef.current, marketPricesRef.current)) {
+        return
+      }
+
+      if (nextEventsToday >= maxEventsTodayRef.current) {
+        setIsAwaitingEndDay(true)
+        isAwaitingEndDayRef.current = true
+        setEndDayButtonText(DEFAULT_END_DAY_BUTTON_TEXT)
+        appendSystemMessage(
+          `【系统】今天的事件已经处理完毕（${nextEventsToday}/${maxEventsTodayRef.current}），可以打卡下班了。`,
+        )
+        return
+      }
+
+      scheduleNextWorkEvent()
+    },
+    [appendSystemMessage, commitActiveEvent, resolveTerminalState, scheduleNextWorkEvent],
+  )
+
+  const resolveCurrentEvent = useCallback(
+    async (optionText) => {
+      const currentEvent = activeEventRef.current
+      const trimmedOption = optionText.trim()
+
+      if (!currentEvent || !trimmedOption || !hasApiKey || isInteractionLocked) {
+        return
+      }
+
+      clearPendingNextEvent()
+      clearTransientErrors()
+
+      const playerMessage = createMessage('player', trimmedOption)
+      const historyForTurn = [...messagesRef.current, playerMessage]
+      messagesRef.current = historyForTurn
+      setMessages(historyForTurn)
+      setIsLoading(true)
+
+      try {
+        const resolutionResult = await requestDeepSeekResolution({
+          apiKey,
+          eventNarrative: currentEvent.narrative,
+          selectedOption: trimmedOption,
+          gameState: gameStateRef.current,
+          history: historyForTurn,
+          talents,
+          inventory: inventoryRef.current,
+        })
+
+        applyResolutionResult(resolutionResult)
+      } catch (error) {
+        appendSystemMessage(`【系统】${error.message || 'AI 判卷失败，本回合按险过处理。'}`)
+        applyResolutionResult({
+          narrative: '【系统】AI 判卷暂时宕机，你先硬着头皮把这回合混过去了。',
+          statChanges: {
+            money: 0,
+            energy: 0,
+            sanity: 0,
+            bossFavor: 0,
+            colleagueFavor: 0,
+            clientFavor: 0,
+          },
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [
+      apiKey,
+      appendSystemMessage,
+      applyResolutionResult,
+      clearPendingNextEvent,
+      clearTransientErrors,
+      hasApiKey,
+      isInteractionLocked,
+      talents,
+    ],
+  )
 
   const runPlayerTurn = useCallback(
     async (rawAction, options = {}) => {
@@ -1849,7 +2387,6 @@ function App() {
       if (!isOpeningScene) {
         setCurrentOptions([])
       }
-      setLoadingHint(LOADING_HINTS[randomInt(0, LOADING_HINTS.length - 1)])
       setIsLoading(true)
 
       try {
@@ -2019,12 +2556,11 @@ function App() {
       return
     }
 
-    setShopErrorMessage('')
-    setMarketErrorMessage('')
-    setSellerErrorMessage('')
-    setBackpackErrorMessage('')
+    clearPendingNextEvent()
+    clearTransientErrors()
     setCurrentOptions([])
     setInvestmentRequest(null)
+    commitActiveEvent(null)
     setIsLoading(true)
 
     try {
@@ -2109,17 +2645,23 @@ function App() {
       }
 
       const specialEventType = rollSpecialEventType()
-      await startDayOpeningEvent(specialEventType)
+      await generateNextEvent(specialEventType, {
+        bypassLock: true,
+        eventIndexOverride: 1,
+      })
     } finally {
       setIsLoading(false)
     }
   }, [
     appendSystemMessage,
     applyDailyMaintenance,
+    clearPendingNextEvent,
+    clearTransientErrors,
+    commitActiveEvent,
+    generateNextEvent,
     hasApiKey,
     isInteractionLocked,
     resolveTerminalState,
-    startDayOpeningEvent,
   ])
 
   useEffect(() => {
@@ -2135,7 +2677,10 @@ function App() {
     }
 
     setHasStarted(true)
-    void startDayOpeningEvent(rollSpecialEventType())
+    void generateNextEvent(rollSpecialEventType(), {
+      bypassLock: true,
+      eventIndexOverride: 1,
+    })
   }, [
     currentOptions.length,
     hasApiKey,
@@ -2143,7 +2688,7 @@ function App() {
     investmentRequest,
     isInteractionLocked,
     isTutorialOpen,
-    startDayOpeningEvent,
+    generateNextEvent,
   ])
 
   const applyFactionInviteChoice = useCallback(
@@ -2178,7 +2723,7 @@ function App() {
     }
 
     applyFactionInviteChoice(optionText)
-    void runPlayerTurn(optionText, { showPlayerMessage: true, isOpeningScene: false })
+    void resolveCurrentEvent(optionText)
   }
 
   const handleSideHustle = () => {
@@ -2688,6 +3233,7 @@ function App() {
     if (amount <= 0) {
       appendSystemMessage('【系统】你临门一脚怂了，最终一分钱都没转。')
       setInvestmentRequest(null)
+      commitActiveEvent(null)
       if (shouldEndDayAfterResolve) {
         setCurrentOptions([])
         setIsAwaitingEndDay(true)
@@ -2695,11 +3241,8 @@ function App() {
         setEndDayButtonText('🌙 终于熬到头了，打卡下班！')
         appendSystemMessage('【系统】今天的事件已处理完，可以打卡下班了。')
       } else {
-        setCurrentOptions(
-          investmentRequest.suggestedOptions?.length
-            ? investmentRequest.suggestedOptions
-            : INVESTMENT_FOLLOWUP_OPTIONS,
-        )
+        setCurrentOptions([])
+        scheduleNextWorkEvent()
       }
       return
     }
@@ -2716,6 +3259,7 @@ function App() {
     setPendingInvestments(nextPending)
     pendingInvestmentsRef.current = nextPending
     setInvestmentRequest(null)
+    commitActiveEvent(null)
     if (shouldEndDayAfterResolve) {
       setCurrentOptions([])
       setIsAwaitingEndDay(true)
@@ -2723,9 +3267,8 @@ function App() {
       setEndDayButtonText('🌙 终于熬到头了，打卡下班！')
       appendSystemMessage('【系统】今天的事件已处理完，可以打卡下班了。')
     } else {
-      setCurrentOptions(
-        investmentRequest.suggestedOptions?.length ? investmentRequest.suggestedOptions : INVESTMENT_FOLLOWUP_OPTIONS,
-      )
+      setCurrentOptions([])
+      scheduleNextWorkEvent()
     }
 
     appendSystemMessage(
@@ -2759,6 +3302,7 @@ function App() {
       gameStateRef.current.day,
     )
     setInvestmentRequest(null)
+    commitActiveEvent(null)
     if (shouldEndDayAfterResolve) {
       setCurrentOptions([])
       setIsAwaitingEndDay(true)
@@ -2766,9 +3310,8 @@ function App() {
       setEndDayButtonText('🌙 终于熬到头了，打卡下班！')
       appendSystemMessage('【系统】今天的事件已处理完，可以打卡下班了。')
     } else {
-      setCurrentOptions(
-        investmentRequest.suggestedOptions?.length ? investmentRequest.suggestedOptions : INVESTMENT_FOLLOWUP_OPTIONS,
-      )
+      setCurrentOptions([])
+      scheduleNextWorkEvent()
     }
   }
 
@@ -2825,7 +3368,7 @@ function App() {
               isAwaitingEndDay={isAwaitingEndDay}
               onOpenPhone={handleOpenPhone}
               unreadPhoneCount={unreadPhoneCount}
-              loadingHint={loadingHint}
+              loadingText={loadingText}
             />
             <InputBar
               options={currentOptions}
@@ -2938,7 +3481,7 @@ function App() {
               isAwaitingEndDay={isAwaitingEndDay}
               onOpenPhone={handleOpenPhone}
               unreadPhoneCount={unreadPhoneCount}
-              loadingHint={loadingHint}
+              loadingText={loadingText}
             />
           </div>
           <InputBar
