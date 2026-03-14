@@ -89,8 +89,8 @@ function ChatPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <header className="relative shrink-0 border-b border-slate-200 px-3 py-2 md:flex md:flex-row md:items-center md:justify-between md:px-6 md:py-3">
-        <div className="min-w-0 pr-12 md:flex md:min-w-0 md:flex-row md:items-center md:gap-4 md:pr-0">
+      <header className="relative shrink-0 border-b border-slate-200 px-3 py-2 md:flex md:flex-row md:items-start md:justify-between md:px-6 md:py-3">
+        <div className="min-w-0 pr-12 md:flex md:min-w-0 md:shrink-0 md:flex-row md:items-center md:gap-4 md:pr-0">
           <div className="md:hidden">
             <div className="flex items-center gap-1 text-[11px] font-medium text-slate-600">
               <span className="font-semibold text-slate-800">Day {day}</span>
@@ -114,7 +114,7 @@ function ChatPanel({
 
           <div className="hidden items-center gap-4 md:flex">
             <h2 className="whitespace-nowrap text-base font-bold text-slate-900">💬 公司生存频道</h2>
-            <div className="w-full min-w-0 md:w-64">
+            <div className="w-full min-w-0 md:w-56 lg:w-64">
               <div className="flex items-center gap-2 text-xs text-slate-600">
                 <span className="font-semibold text-slate-700">Day {day}</span>
                 <span>{currentTimelineLabel}</span>
@@ -132,16 +132,18 @@ function ChatPanel({
           </div>
         </div>
 
-        <div className="absolute right-3 top-2 flex items-center gap-2 md:static md:flex md:flex-row md:items-center md:gap-4">
+        <div className="absolute right-3 top-2 flex items-center gap-2 md:static md:flex md:min-w-0 md:flex-1 md:items-start md:justify-end md:gap-3">
           <div
-            className="hidden min-w-0 md:block"
+            className="hidden min-w-0 md:flex md:max-w-[26rem] md:flex-col md:items-end lg:max-w-[34rem] xl:max-w-[42rem]"
             title={currentThemeDescription}
           >
-            <p className="text-sm font-semibold text-sky-700">{`🎭 今日主题：${currentThemeName}`}</p>
-            <p className="max-w-xs truncate text-xs text-slate-400">{currentThemeDescription}</p>
+            <p className="text-right text-sm font-semibold text-sky-700">{`🎭 今日主题：${currentThemeName}`}</p>
+            <p className="mt-0.5 text-right text-[11px] leading-tight text-slate-400 whitespace-normal">
+              {currentThemeDescription}
+            </p>
           </div>
           <span
-            className={`hidden rounded-full px-3 py-1 text-xs md:inline-flex ${
+            className={`hidden shrink-0 rounded-full px-3 py-1 text-xs md:inline-flex ${
               isVictory
                 ? 'border border-emerald-300 bg-emerald-50 text-emerald-700'
                 : isGameOver
@@ -154,7 +156,7 @@ function ChatPanel({
           <button
             type="button"
             onClick={onOpenPhone}
-            className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 md:h-9 md:w-auto md:gap-1 md:rounded-xl md:px-3 md:text-xs md:font-medium"
+            className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 md:h-9 md:w-auto md:gap-1 md:rounded-xl md:px-3 md:text-xs md:font-medium"
           >
             <Smartphone size={15} />
             <span className="hidden md:inline">手机</span>
