@@ -833,7 +833,7 @@ function decayInventory(currentInventory) {
     const nextDurability = item.durability - 1
     if (nextDurability <= 0) {
       brokenItems.push(item)
-      return
+      return { ok: false, reason: 'insufficient_funds' }
     }
     nextInventory.push({
       ...item,
@@ -887,6 +887,49 @@ function effectDeltaToChangePayload(itemCost, effectDelta = {}) {
     colleagueFavorChange: effectDelta.colleagueFavor || 0,
     clientFavorChange: effectDelta.clientFavor || 0,
   })
+}
+
+const shopToastStatMeta = {
+  energy: { label: '精力', positiveVerb: '恢复至', negativeVerb: '降至' },
+  sanity: { label: '精神状态', positiveVerb: '恢复至', negativeVerb: '降至' },
+  bossFavor: { label: '老板好感度', positiveVerb: '提升至', negativeVerb: '降至' },
+  colleagueFavor: { label: '同事关系', positiveVerb: '提升至', negativeVerb: '降至' },
+  clientFavor: { label: '甲方满意度', positiveVerb: '提升至', negativeVerb: '降至' },
+  wisdom: { label: '智慧', positiveVerb: '提升至', negativeVerb: '降至' },
+  luck: { label: '运气', positiveVerb: '提升至', negativeVerb: '降至' },
+}
+
+function formatShopToastMoney(value) {
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric)) {
+    return '0'
+  }
+  return Number.isInteger(numeric) ? `${numeric}` : numeric.toFixed(2)
+}
+
+function buildShopPurchaseToastMessage(item, nextState, previousHealthState, nextHealthState) {
+  const details = []
+
+  Object.entries(shopToastStatMeta).forEach(([statKey, meta]) => {
+    const delta = Number(item.effects?.[statKey] || 0)
+    if (!delta) {
+      return
+    }
+
+    const nextValue = Number(nextState[statKey] ?? 0)
+    const verb = delta > 0 ? meta.positiveVerb : meta.negativeVerb
+    details.push(`${meta.label}${verb}${nextValue}`)
+  })
+
+  if (item.cures?.sick && previousHealthState.sick && !nextHealthState.sick) {
+    details.push('生病状态已解除')
+  }
+  if (item.cures?.depressed && previousHealthState.depressed && !nextHealthState.depressed) {
+    details.push('抑郁状态已解除')
+  }
+
+  const detailText = details.length ? `。${details.join('，')}。` : '。'
+  return `购买成功！花费了 $${formatShopToastMoney(item.cost)}。${item.name} 已生效${detailText}`
 }
 
 function clearAllDebuffs(baseHealthState) {
@@ -2942,14 +2985,15 @@ function App() {
 
   const handleBuyItem = (item) => {
     if (isInteractionLocked) {
-      return
+      return { ok: false, reason: 'locked' }
     }
 
     if (gameStateRef.current.money < item.cost) {
       setShopErrorMessage('穷鬼，钱不够！')
-      return
+      return { ok: false, reason: 'insufficient_funds' }
     }
 
+    const previousHealthState = healthStateRef.current
     const nextState = applyEffectDeltaToState(
       {
         ...gameStateRef.current,
@@ -2985,11 +3029,13 @@ function App() {
     setShopErrorMessage('')
     setGameState(nextState)
     gameStateRef.current = nextState
+    pushToast(buildShopPurchaseToastMessage(item, nextState, previousHealthState, nextHealthState), 'success')
     appendSystemMessage(
       `【系统】你花费了金钱，购买了${item.name}，感觉身体和精神都产生了变化。`,
       effectDeltaToChangePayload(item.cost, item.effects),
     )
     resolveTerminalState(nextState, nextHealthState)
+    return { ok: true, nextState, nextHealthState }
   }
 
   const handleHospitalize = () => {

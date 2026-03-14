@@ -105,6 +105,17 @@ body {
   }
 }
 
+@keyframes float-up-fade {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) scale(1.2);
+  }
+}
+
 .animate-screen-shake {
   animation: shake 0.4s ease;
 }
@@ -115,4 +126,8 @@ body {
 
 .animate-float-up {
   animation: floatUp 0.9s ease forwards;
+}
+
+.animate-float-damage {
+  animation: float-up-fade 0.8s ease-out forwards;
 }
